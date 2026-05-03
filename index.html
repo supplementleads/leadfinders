@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lead Finder — Hypervant & KratomLyte</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:#0D0D0F;--surface:#16161A;--surface2:#1E1E24;--border:#2A2A32;
+    --accent-hv:#4AF0C4;--accent-kl:#F0A84A;--accent-both:#A084F0;
+    --text:#F0EFE9;--muted:#7A7A8A;--danger:#F05A4A;--success:#4AF080;
+    --font-head:'Syne',sans-serif;--font-mono:'DM Mono',monospace;--radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-head);min-height:100vh;}
+  .shell{display:flex;min-height:100vh;}
+  .sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
+  .logo{padding:28px 24px 20px;border-bottom:1px solid var(--border);}
+  .logo-title{font-size:15px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+  .logo-sub{font-size:10px;color:var(--muted);font-family:var(--font-mono);margin-top:3px;}
+  .nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);border:none;background:none;width:100%;text-align:left;transition:all .15s;}
+  .nav-item:hover{color:var(--text);background:var(--surface2);}
+  .nav-item.active{color:var(--text);background:var(--surface2);border-left:3px solid var(--accent-hv);padding-left:9px;}
+  .sidebar-bottom{padding:16px 12px;border-top:1px solid var(--border);}
+  .api-status{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10px;color:var(--muted);}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--danger);flex-shrink:0;}
+  .dot.on{background:var(--success);}
+  .main{flex:1;overflow-y:auto;}
+  .page{display:none;padding:36px 40px;max-width:960px;}
+  .page.active{display:block;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+  .page-title{font-size:26px;font-weight:800;letter-spacing:-.02em;}
+  .page-title span{color:var(--accent-hv);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:16px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .form-row-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--font-mono);}
+  input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-head);font-size:14px;padding:10px 14px;outline:none;transition:border-color .15s;width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent-hv);}
+  select option{background:var(--surface2);}
+  textarea{resize:vertical;line-height:1.6;}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;font-family:var(--font-head);font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);transition:all .15s;}
+  .btn:hover{border-color:var(--accent-hv);color:var(--accent-hv);}
+  .btn-primary{background:var(--accent-hv);color:var(--bg);border-color:var(--accent-hv);}
+  .btn-primary:hover{opacity:.85;color:var(--bg);}
+  .btn-sm{padding:6px 14px;font-size:12px;}
+  .btn-full{width:100%;justify-content:center;}
+  .btn-danger{border-color:var(--danger);color:var(--danger);}
+  .btn-danger:hover{background:var(--danger);color:var(--bg);}
+  .btn-kl{background:var(--accent-kl);color:var(--bg);border-color:var(--accent-kl);}
+  .btn-kl:hover{opacity:.85;color:var(--bg);}
+  .setup-banner{background:linear-gradient(135deg,rgba(74,240,196,.08),rgba(74,240,196,.02));border:1px solid rgba(74,240,196,.3);border-radius:var(--radius);padding:22px 24px;margin-bottom:20px;}
+  .setup-title{font-size:14px;font-weight:700;color:var(--accent-hv);margin-bottom:8px;}
+  .setup-steps{font-size:12px;color:var(--muted);font-family:var(--font-mono);line-height:2.2;margin-bottom:14px;}
+  .setup-steps a{color:var(--accent-hv);}
+  .setup-steps strong{color:var(--text);}
+  .key-row{display:flex;gap:10px;}
+  .key-row input{flex:1;}
+  .lead-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:10px;}
+  .lead-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:10px;}
+  .lead-name{font-size:15px;font-weight:700;}
+  .badge{font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:20px;font-family:var(--font-mono);white-space:nowrap;}
+  .badge-hv{background:rgba(74,240,196,.1);color:var(--accent-hv);border:1px solid rgba(74,240,196,.25);}
+  .badge-kl{background:rgba(240,168,74,.1);color:var(--accent-kl);border:1px solid rgba(240,168,74,.25);}
+  .badge-both{background:rgba(160,132,240,.1);color:var(--accent-both);border:1px solid rgba(160,132,240,.25);}
+  .lead-meta{font-size:12px;color:var(--muted);font-family:var(--font-mono);margin-bottom:12px;line-height:2;}
+  .lead-meta a{color:var(--accent-hv);text-decoration:none;}
+  .lead-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .msg-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:16px;}
+  .msg-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-mono);color:var(--muted);margin-bottom:6px;}
+  .msg-subject{font-size:15px;font-weight:700;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+  .stat-n{font-size:28px;font-weight:800;}
+  .stat-l{font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-top:2px;}
+  .pipeline-table{width:100%;border-collapse:collapse;}
+  .pipeline-table th{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-mono);color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);text-align:left;}
+  .pipeline-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+  .pipeline-table tr:last-child td{border-bottom:none;}
+  .pipeline-table tr:hover td{background:var(--surface2);}
+  select.status-select{background:transparent;border:none;font-family:var(--font-mono);font-size:12px;padding:4px;width:auto;cursor:pointer;}
+  .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+  .chip{padding:5px 14px;font-size:11px;font-weight:600;font-family:var(--font-mono);border:1px solid var(--border);border-radius:20px;cursor:pointer;background:transparent;color:var(--muted);transition:all .12s;}
+  .chip:hover{border-color:var(--accent-hv);color:var(--accent-hv);}
+  .chip.on{background:var(--accent-hv);color:var(--bg);border-color:var(--accent-hv);}
+  .loading-row{display:flex;align-items:center;gap:12px;padding:24px 0;font-size:13px;color:var(--muted);font-family:var(--font-mono);}
+  .spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent-hv);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .empty{font-size:13px;color:var(--muted);padding:20px 0;font-family:var(--font-mono);}
+  .err-box{background:rgba(240,90,74,.08);border:1px solid rgba(240,90,74,.25);border-radius:var(--radius);padding:16px 20px;font-size:13px;color:var(--danger);font-family:var(--font-mono);line-height:1.8;margin-top:16px;}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-family:var(--font-mono);color:var(--muted);margin-bottom:12px;}
+  hr.divider{border:none;border-top:1px solid var(--border);margin:24px 0;}
+  #toast{position:fixed;bottom:24px;right:24px;background:var(--accent-hv);color:var(--bg);font-size:13px;font-weight:700;padding:12px 20px;border-radius:8px;opacity:0;transform:translateY(10px);transition:all .2s;pointer-events:none;z-index:9999;font-family:var(--font-mono);}
+  #toast.show{opacity:1;transform:translateY(0);}
+  ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="sidebar">
+    <div class="logo"><div class="logo-title">LeadEngine</div><div class="logo-sub">Hypervant · KratomLyte</div></div>
+    <nav class="nav">
+      <button class="nav-item active" onclick="showPage('find',this)"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>Find Leads</button>
+      <button class="nav-item" onclick="showPage('outreach',this)"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.72A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>Outreach</button>
+      <button class="nav-item" onclick="showPage('pipeline',this)"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Pipeline</button>
+      <button class="nav-item" onclick="showPage('settings',this)"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</button>
+    </nav>
+    <div class="sidebar-bottom"><div class="api-status"><div class="dot" id="api-dot"></div><span id="api-label">No API key</span></div></div>
+  </div>
+
+  <div class="main">
+    <!-- FIND -->
+    <div class="page active" id="page-find">
+      <div class="topbar"><div class="page-title">Find <span>Leads</span></div><button class="btn btn-sm" onclick="exportCSV()">↓ Export CSV</button></div>
+      <div class="setup-banner" id="setup-banner">
+        <div class="setup-title">⚡ Connect Google Maps to search real businesses</div>
+        <div class="setup-steps">
+          1. Go to <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> and open your project<br>
+          2. <strong>APIs & Services → Library</strong> → enable <strong>Places API</strong> (classic)<br>
+          3. Also enable <strong>Maps JavaScript API</strong><br>
+          4. <strong>Billing → link a billing account</strong> (required, won't charge within free tier)<br>
+          5. <strong>Credentials → + Create API Key</strong> → paste below
+        </div>
+        <div class="key-row">
+          <input type="password" id="api-key-banner" placeholder="Paste your new API key here..." />
+          <button class="btn btn-primary" onclick="saveKeyBanner()">Save & Connect</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="form-row-4">
+          <div class="field"><label>Brand</label><select id="f-brand"><option value="both">Both Brands</option><option value="hypervant">Hypervant</option><option value="kratomlyte">KratomLyte</option></select></div>
+          <div class="field"><label>Account Type</label><select id="f-type"><option value="MMA gym">MMA / BJJ Gym</option><option value="CrossFit gym">CrossFit</option><option value="smoke shop">Smoke Shop</option><option value="kava bar">Kava Bar</option><option value="health food store">Health Food Store</option><option value="vitamin supplement store">Vitamin Shop</option><option value="tactical supply store">Tactical Supply</option><option value="boxing gym">Boxing Gym</option></select></div>
+          <div class="field"><label>City</label><input type="text" id="f-city" placeholder="e.g. Las Vegas, NV" value="Las Vegas, NV" /></div>
+          <div class="field"><label>Max Results</label><select id="f-count"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option></select></div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="searchLeads()">Search Leads</button>
+      </div>
+      <div id="find-results"></div>
+    </div>
+
+    <!-- OUTREACH -->
+    <div class="page" id="page-outreach">
+      <div class="topbar"><div class="page-title">Write <span>Outreach</span></div></div>
+      <div class="card">
+        <div class="form-row">
+          <div class="field"><label>Brand</label><select id="o-brand"><option value="hypervant">Hypervant</option><option value="kratomlyte">KratomLyte</option></select></div>
+          <div class="field"><label>Message Type</label><select id="o-msgtype"><option value="email">Cold Email</option><option value="text">Text / DM</option><option value="walkin">Walk-in Script</option><option value="linkedin">LinkedIn Message</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Business Name</label><input type="text" id="o-biz" placeholder="e.g. Desert Combat Sports" /></div>
+          <div class="field"><label>Business Type</label><select id="o-biztype"><option value="gym">MMA / BJJ Gym</option><option value="crossfit">CrossFit</option><option value="smoke">Smoke Shop</option><option value="kava">Kava Bar</option><option value="health">Health Food Store</option><option value="vitamin">Vitamin Shop</option><option value="tactical">Tactical Supply</option></select></div>
+        </div>
+        <div class="field" style="margin-bottom:16px;"><label>Contact Name (optional)</label><input type="text" id="o-contact" placeholder="e.g. Mike or Owner" /></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="buildOutreach()">Generate Message</button>
+          <button class="btn" onclick="buildOutreach('hv')">Hypervant Version</button>
+          <button class="btn btn-kl" onclick="buildOutreach('kl')">KratomLyte Version</button>
+        </div>
+      </div>
+      <div id="outreach-result"></div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="page" id="page-pipeline">
+      <div class="topbar"><div class="page-title">Sales <span>Pipeline</span></div><button class="btn btn-sm" onclick="exportPipelineCSV()">↓ Export CSV</button></div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-n" id="s-total">0</div><div class="stat-l">TOTAL</div></div>
+        <div class="stat-card"><div class="stat-n" style="color:var(--muted)" id="s-prospect">0</div><div class="stat-l">PROSPECTING</div></div>
+        <div class="stat-card"><div class="stat-n" style="color:var(--accent-hv)" id="s-contacted">0</div><div class="stat-l">CONTACTED</div></div>
+        <div class="stat-card"><div class="stat-n" style="color:var(--accent-both)" id="s-interested">0</div><div class="stat-l">INTERESTED</div></div>
+        <div class="stat-card"><div class="stat-n" style="color:var(--success)" id="s-won">0</div><div class="stat-l">WON</div></div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-label">Add Account Manually</div>
+        <div class="form-row-4">
+          <div class="field"><label>Name</label><input type="text" id="p-name" placeholder="Business name" /></div>
+          <div class="field"><label>Brand</label><select id="p-brand"><option>Hypervant</option><option>KratomLyte</option><option>Both</option></select></div>
+          <div class="field"><label>Status</label><select id="p-status"><option value="prospecting">Prospecting</option><option value="contacted">Contacted</option><option value="interested">Interested</option><option value="won">Won</option><option value="lost">Lost</option></select></div>
+          <div class="field"><label>Notes</label><input type="text" id="p-note" placeholder="Optional" /></div>
+        </div>
+        <button class="btn btn-primary" onclick="addToPipeline()">Add Account</button>
+      </div>
+      <div class="chip-row">
+        <span style="font-size:11px;color:var(--muted);font-family:var(--font-mono);">FILTER</span>
+        <button class="chip on" onclick="filterPipeline('all',this)">All</button>
+        <button class="chip" onclick="filterPipeline('prospecting',this)">Prospecting</button>
+        <button class="chip" onclick="filterPipeline('contacted',this)">Contacted</button>
+        <button class="chip" onclick="filterPipeline('interested',this)">Interested</button>
+        <button class="chip" onclick="filterPipeline('won',this)">Won</button>
+        <button class="chip" onclick="filterPipeline('lost',this)">Lost</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="pipeline-table">
+          <thead><tr><th>Business</th><th>Brand</th><th>Status</th><th>Notes</th><th>Added</th><th></th></tr></thead>
+          <tbody id="pipeline-body"></tbody>
+        </table>
+        <div id="pipeline-empty" class="empty" style="display:none;">No accounts yet.</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="topbar"><div class="page-title">⚙ <span>Settings</span></div></div>
+      <div class="card">
+        <div class="section-label">Google Maps API Key</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.8;">You need these enabled in Google Cloud Console:<br><strong style="color:var(--text)">① Places API &nbsp; ② Maps JavaScript API &nbsp; ③ Billing linked</strong></p>
+        <div class="key-row" style="margin-bottom:10px;">
+          <input type="password" id="settings-key" placeholder="Paste API key..." />
+          <button class="btn btn-primary" onclick="saveKeySettings()">Save</button>
+          <button class="btn btn-danger btn-sm" onclick="clearKey()">Clear</button>
+        </div>
+        <div id="key-msg" style="font-size:12px;font-family:var(--font-mono);color:var(--muted);"></div>
+      </div>
+      <hr class="divider">
+      <div class="card">
+        <div class="section-label">Your Info (auto-fills outreach)</div>
+        <div class="form-row">
+          <div class="field"><label>Your Name</label><input type="text" id="s-name" placeholder="Your name" /></div>
+          <div class="field"><label>Phone</label><input type="text" id="s-phone" placeholder="(702) 555-1234" /></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Email</label><input type="text" id="s-email" placeholder="you@company.com" /></div>
+          <div class="field"><label>Title</label><input type="text" id="s-title" placeholder="Sales Director" /></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+      </div>
+      <hr class="divider">
+      <div class="card">
+        <div class="section-label">Data</div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-danger btn-sm" onclick="clearPipeline()">Clear Pipeline</button>
+          <button class="btn btn-sm" onclick="exportPipelineCSV()">Export Pipeline CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="map-hidden" style="display:none;width:1px;height:1px;position:absolute;"></div>
+
+<script>
+let apiKey=localStorage.getItem('gmaps_key')||'';
+let pipeline=JSON.parse(localStorage.getItem('pipeline')||'[]');
+let profile=JSON.parse(localStorage.getItem('profile')||'{"name":"[YOUR NAME]","phone":"[YOUR PHONE]","email":"[YOUR EMAIL]","title":"Sales Director"}');
+let pipelineFilter='all',lastLeads=[],mapsLoaded=false,placesService=null;
+
+updateApiStatus();renderPipeline();
+if(apiKey){document.getElementById('setup-banner').style.display='none';loadMapsAPI(apiKey);}
+if(profile.name!=='[YOUR NAME]'){document.getElementById('s-name').value=profile.name;document.getElementById('s-phone').value=profile.phone;document.getElementById('s-email').value=profile.email;document.getElementById('s-title').value=profile.title;}
+
+function showPage(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');el.classList.add('active');}
+function goToPage(id){const items=document.querySelectorAll('.nav-item');const ids=['find','outreach','pipeline','settings'];showPage(id,items[ids.indexOf(id)]);}
+
+function saveKeyBanner(){const k=document.getElementById('api-key-banner').value.trim();if(!k){toast('Paste your key first.');return;}apiKey=k;localStorage.setItem('gmaps_key',k);document.getElementById('setup-banner').style.display='none';updateApiStatus();loadMapsAPI(k);toast('Key saved — loading Maps...');}
+function saveKeySettings(){const k=document.getElementById('settings-key').value.trim();if(!k)return;apiKey=k;localStorage.setItem('gmaps_key',k);document.getElementById('setup-banner').style.display='none';document.getElementById('key-msg').textContent='✓ Key saved. Loading Maps...';document.getElementById('key-msg').style.color='var(--success)';updateApiStatus();loadMapsAPI(k);toast('Key saved!');}
+function clearKey(){apiKey='';localStorage.removeItem('gmaps_key');document.getElementById('settings-key').value='';document.getElementById('key-msg').textContent='Key cleared.';mapsLoaded=false;placesService=null;updateApiStatus();}
+function updateApiStatus(){document.getElementById('api-dot').classList.toggle('on',!!apiKey);document.getElementById('api-label').textContent=apiKey?(mapsLoaded?'Maps connected ✓':'Key saved'):'No API key';}
+
+function loadMapsAPI(key){
+  const old=document.getElementById('gmaps-script');if(old){if(mapsLoaded){initPlaces();}return;}
+  const s=document.createElement('script');s.id='gmaps-script';
+  s.src=`https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=onMapsLoaded`;
+  s.async=true;s.defer=true;
+  s.onerror=()=>{document.getElementById('find-results').innerHTML='<div class="err-box">❌ Failed to load Google Maps API.<br>Check: ① Key is correct ② Maps JavaScript API is enabled ③ Billing is linked</div>';};
+  document.head.appendChild(s);
+}
+window.onMapsLoaded=function(){mapsLoaded=true;initPlaces();updateApiStatus();toast('Google Maps connected ✓');};
+function initPlaces(){const map=new google.maps.Map(document.getElementById('map-hidden'),{center:{lat:36.17,lng:-115.14},zoom:12});placesService=new google.maps.places.PlacesService(map);}
+
+function searchLeads(){
+  if(!apiKey){toast('Add your API key first.');return;}
+  if(!mapsLoaded||!placesService){toast('Maps still loading — wait a moment and try again.');if(apiKey)loadMapsAPI(apiKey);return;}
+  const type=document.getElementById('f-type').value;
+  const city=document.getElementById('f-city').value.trim()||'Las Vegas, NV';
+  const brand=document.getElementById('f-brand').value;
+  const maxR=parseInt(document.getElementById('f-count').value);
+  const res=document.getElementById('find-results');
+  res.innerHTML='<div class="loading-row"><div class="spinner"></div>Searching '+city+' for '+type+'s...</div>';
+  const geocoder=new google.maps.Geocoder();
+  geocoder.geocode({address:city},function(gr,gs){
+    const req={query:type+' in '+city,fields:['name','formatted_address','place_id','rating','geometry']};
+    if(gs==='OK'&&gr[0]){req.location=gr[0].geometry.location;req.radius=25000;}
+    placesService.textSearch(req,function(results,status){
+      if(status===google.maps.places.PlacesServiceStatus.OK&&results.length>0){
+        enrichResults(results.slice(0,maxR),brand,type,city,res);
+      }else if(status===google.maps.places.PlacesServiceStatus.ZERO_RESULTS){
+        res.innerHTML='<div class="empty">No results for "'+type+'" in '+city+'. Try a different city or type.</div>';
+      }else{
+        res.innerHTML='<div class="err-box">❌ Search error: '+status+'<br><br>Make sure <strong>Places API</strong> and <strong>Maps JavaScript API</strong> are both enabled, and billing is active.</div>';
+      }
+    });
+  });
+}
+
+function enrichResults(results,brand,type,city,container){
+  let enriched=new Array(results.length).fill(null);
+  let done=0;const detailCount=Math.min(results.length,5);
+  results.forEach((place,idx)=>{
+    const basic={name:place.name,address:place.formatted_address||'',phone:'',website:'',rating:place.rating||null,place_id:place.place_id,type,city};
+    if(idx<detailCount){
+      placesService.getDetails({placeId:place.place_id,fields:['formatted_phone_number','website']},function(d,s){
+        enriched[idx]={...basic,phone:(s==='OK'&&d?.formatted_phone_number)?d.formatted_phone_number:'',website:(s==='OK'&&d?.website)?d.website:''};
+        done++;if(done===detailCount){for(let i=detailCount;i<results.length;i++)enriched[i]={name:results[i].name,address:results[i].formatted_address||'',phone:'',website:'',rating:results[i].rating||null,place_id:results[i].place_id,type,city};lastLeads=enriched.map(e=>({...e,brand}));renderLeads(enriched,brand,container);}
+      });
+    }
+  });
+  if(results.length===0){renderLeads([],brand,container);}
+}
+
+function getBrand(type,sel){if(sel!=='both')return sel;if(type.toLowerCase().includes('smoke')||type.toLowerCase().includes('kava'))return 'kratomlyte';return 'hypervant';}
+
+function renderLeads(places,brandFilter,container){
+  if(!places||!places.length){container.innerHTML='<div class="empty">No results found.</div>';return;}
+  container.innerHTML=places.filter(Boolean).map(p=>{
+    const brand=getBrand(p.type,brandFilter);
+    return`<div class="lead-card"><div class="lead-header"><div class="lead-name">${p.name}</div><span class="badge badge-${brand}">${brand==='hypervant'?'HYPERVANT':'KRATOMLYTE'}</span></div><div class="lead-meta">📍 ${p.address||'—'}${p.phone?'<br>📞 '+p.phone:''}${p.website?'<br>🌐 <a href="'+p.website+'" target="_blank">'+p.website+'</a>':''}${p.rating?'<br>⭐ '+p.rating+' rating':''}</div><div class="lead-actions"><button class="btn btn-sm" onclick="prefillOutreach('${brand}','${p.name.replace(/'/g,"\\'")}','${p.type}','')">Write Outreach</button><button class="btn btn-sm" onclick="addLeadToPipeline('${p.name.replace(/'/g,"\\'")}','${brand}')">Add to Pipeline</button><button class="btn btn-sm" onclick="window.open('https://www.google.com/maps/place/?q=place_id:${p.place_id}','_blank')">View on Maps</button></div></div>`;
+  }).join('');
+}
+
+const TEMPLATES={hypervant:{email:{gym:{subject:"A clean performance product your athletes will love",body:`Hi [CONTACT],\n\nI'm [YOUR_NAME] — I wanted to reach out because [BIZ] is exactly the kind of place Hypervant was built for.\n\nWe make stimulant-free performance drink sticks — OXYGEN for endurance and VO₂ support, CLARITY for calm focus. Zero sugar, zero caffeine, clean label. Athletes can stack it with whatever they're already taking.\n\nRetail is $22.99 for 10 sticks. Wholesale margins are strong. I'd love to get samples in your hands — no commitment.\n\nWould you be open to a quick call or can I drop some by?\n\n[YOUR_NAME]\n[YOUR_TITLE] | [YOUR_PHONE]\nhypervant.com`},crossfit:{subject:"Stimulant-free endurance support — built for CrossFit",body:`Hi [CONTACT],\n\nI'm [YOUR_NAME] with Hypervant. Stimulant-free performance drink sticks — OXYGEN for endurance/VO₂, CLARITY for focus. Zero sugar, zero caffeine.\n\nYour members want results without the crash. Strong wholesale margins, low MOQ. Happy to send samples first.\n\n[YOUR_NAME] | [YOUR_PHONE]\nhypervant.com`},tactical:{subject:"Performance support for your tactical customers — no stimulants",body:`Hi [CONTACT],\n\nHypervant is built for people who perform under pressure — military, law enforcement, fighters.\n\nOXYGEN supports endurance. CLARITY delivers calm, locked-in focus. No caffeine, no crash.\n\nStrong margins, low MOQ. Can I send samples?\n\n[YOUR_NAME] | [YOUR_PHONE]\nhypervant.com`},vitamin:{subject:"Emerging clean-label performance brand for your shelf",body:`Hi [CONTACT],\n\nI'm [YOUR_NAME] with Hypervant — stimulant-free performance drink sticks. Zero sugar, zero caffeine, clean label. $22.99 SRP, strong margins, low MOQ, 30-day risk-free.\n\nWould love to get on your radar for a shelf test.\n\n[YOUR_NAME] | [YOUR_PHONE]\nhypervant.com`},default:{subject:"Hypervant — clean performance product for your customers",body:`Hi [CONTACT],\n\nI'm [YOUR_NAME] — I think Hypervant would be a great fit for [BIZ].\n\nStimulant-free performance drink sticks. Clean label, zero sugar, zero caffeine. Strong margins, low MOQ, samples available.\n\n[YOUR_NAME] | [YOUR_PHONE]\nhypervant.com`}},text:{gym:"Hey [CONTACT] — [YOUR_NAME] from Hypervant. Stimulant-free performance drink sticks for fighters/athletes. Zero caffeine, great margins. Worth getting samples to [BIZ]?",default:"Hey [CONTACT] — [YOUR_NAME] with Hypervant. Stimulant-free performance drink sticks, clean label, strong margins. Worth a quick chat about [BIZ]?"},walkin:{gym:`"Hey — I'm [YOUR_NAME] with Hypervant. Stimulant-free performance drink sticks for fighters and athletes. Zero caffeine, zero sugar, clean label. Can I leave samples for the coaches and walk you through wholesale pricing?"`,default:`"Hey, I'm [YOUR_NAME] with Hypervant. Stimulant-free performance drink sticks — clean label, zero sugar. Can I leave samples and our wholesale info?"`},linkedin:{default:"Hi [CONTACT] — I'm [YOUR_NAME] with Hypervant, a stimulant-free performance drink stick brand. Clean label, strong wholesale margins. Thought [BIZ] could be a great fit. Happy to send samples — would love to connect."}},kratomlyte:{email:{smoke:{subject:"A premium kratom drink mix your customers will keep coming back for",body:`Hi [CONTACT],\n\nI'm [YOUR_NAME] — reaching out about KratomLyte for [BIZ].\n\nWe make flavored kratom, kava, kanna, and neuro leaf drink mixes in stick pack format — water-soluble, instant mix, no grit, no bitterness.\n\nYour customers already buy kratom. KratomLyte gives them a premium format they'll prefer and reorder.\n\nStrong margins, low MOQ, samples available.\n\n[YOUR_NAME] | [YOUR_PHONE]\nkratomlyte.com`},kava:{subject:"Take-home kava & kratom stick packs — a natural upsell for your bar",body:`Hi [CONTACT],\n\nI'm [YOUR_NAME] with KratomLyte. Flavored kava, kratom, kanna, and neuro leaf drink mixes in single-serve stick packs.\n\nFor a kava bar like [BIZ], our Kava-Lyte line is a natural take-home upsell — customers bring the experience home and keep buying.\n\n[YOUR_NAME] | [YOUR_PHONE]\nkratomlyte.com`},default:{subject:"KratomLyte — flavored botanical drink mixes for your shelf",body:`Hi [CONTACT],\n\nI'm [YOUR_NAME] — I wanted to introduce KratomLyte to [BIZ].\n\nFlavored botanical drink mixes — kratom, kava, kanna, neuro leaf — instant-mix stick pack format. No bitterness, great flavors, 21+ product.\n\nStrong margins, low MOQ. Samples available.\n\n[YOUR_NAME] | [YOUR_PHONE]\nkratomlyte.com`}},text:{smoke:"Hey [CONTACT] — [YOUR_NAME] with KratomLyte. Premium flavored kratom & kava stick packs. Strong margins, low MOQ. Worth a chat about [BIZ]?",kava:"Hi [CONTACT], [YOUR_NAME] from KratomLyte. Flavored kava & kratom stick packs — great take-home upsell. Can I send samples?",default:"Hey [CONTACT], [YOUR_NAME] with KratomLyte. Flavored kratom, kava & kanna drink mixes — no bitterness, great margins. Worth getting samples to [BIZ]?"},walkin:{smoke:`"Hey — I'm [YOUR_NAME] with KratomLyte. Flavored kratom and kava drink mixes in stick packs — instant mix, no bitterness. Your customers already buy kratom — this is the premium format they'll prefer. Can I leave samples and share wholesale pricing?"`,kava:`"Hey, I'm [YOUR_NAME] with KratomLyte. Flavored kava and kratom stick packs — perfect for customers who want to take the experience home. Can I leave samples and walk you through our wholesale program?"`,default:`"Hey — [YOUR_NAME] with KratomLyte. Flavored kava, kratom, and kanna drink mixes. Instant mix, great flavors, strong margins. Can I leave samples and our pricing info?"`},linkedin:{default:"Hi [CONTACT] — I'm [YOUR_NAME] with KratomLyte. Flavored kratom, kava, and kanna drink mix stick packs — no bitterness, strong margins. Thought [BIZ] could be a great fit. Happy to send samples with no obligation."}}};
+
+function getTemplate(brand,msgType,bizType){const t=TEMPLATES[brand]?.[msgType];if(!t)return{subject:'',body:'Not found.'};const key=Object.keys(t).find(k=>k!=='default'&&bizType.toLowerCase().includes(k))||'default';return t[key]||t.default||{subject:'',body:''};}
+function applyProfile(text){return text.replace(/\[YOUR_NAME\]/g,profile.name).replace(/\[YOUR_PHONE\]/g,profile.phone).replace(/\[YOUR_EMAIL\]/g,profile.email).replace(/\[YOUR_TITLE\]/g,profile.title);}
+
+function buildOutreach(forceBrand){
+  const brand=forceBrand==='hv'?'hypervant':forceBrand==='kl'?'kratomlyte':document.getElementById('o-brand').value;
+  const msgType=document.getElementById('o-msgtype').value;
+  const biz=document.getElementById('o-biz').value.trim()||'[Business Name]';
+  const bizType=document.getElementById('o-biztype').value;
+  const contact=document.getElementById('o-contact').value.trim()||'there';
+  const tpl=getTemplate(brand,msgType,bizType);
+  const body=applyProfile(tpl.body||'').replace(/\[BIZ\]/g,biz).replace(/\[CONTACT\]/g,contact);
+  document.getElementById('outreach-result').innerHTML=`<div class="msg-box">${tpl.subject?`<div class="msg-label">Subject Line</div><div class="msg-subject">${tpl.subject}</div>`:''}<div class="msg-label">Message — Edit Before Sending</div><textarea id="editable-msg" style="min-height:220px;">${body}</textarea><div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="copyMsg()">Copy to Clipboard</button><button class="btn btn-sm" onclick="addLeadToPipeline('${biz.replace(/'/g,"\\'")}','${brand}')">Add to Pipeline</button></div></div>`;
+}
+
+function prefillOutreach(brand,name,type,contact){document.getElementById('o-brand').value=brand;document.getElementById('o-biz').value=name;document.getElementById('o-contact').value=contact;const typeMap={gym:'gym',crossfit:'crossfit',smoke:'smoke',kava:'kava',health:'health',vitamin:'vitamin',tactical:'tactical'};const matched=Object.keys(typeMap).find(k=>type.toLowerCase().includes(k));if(matched)document.getElementById('o-biztype').value=typeMap[matched];goToPage('outreach');buildOutreach();}
+function copyMsg(){navigator.clipboard.writeText(document.getElementById('editable-msg').value).then(()=>toast('Copied!'));}
+
+function addToPipeline(){const name=document.getElementById('p-name').value.trim();if(!name){toast('Enter a business name.');return;}pipeline.push({name,brand:document.getElementById('p-brand').value,status:document.getElementById('p-status').value,note:document.getElementById('p-note').value,date:new Date().toLocaleDateString()});document.getElementById('p-name').value='';document.getElementById('p-note').value='';savePipeline();renderPipeline();toast(name+' added!');}
+function addLeadToPipeline(name,brand){pipeline.push({name,brand:brand==='hypervant'?'Hypervant':'KratomLyte',status:'contacted',note:'',date:new Date().toLocaleDateString()});savePipeline();renderPipeline();toast(name+' added to pipeline!');}
+function updateStatus(i,val){pipeline[i].status=val;savePipeline();renderPipeline();}
+function removeFromPipeline(i){pipeline.splice(i,1);savePipeline();renderPipeline();}
+function savePipeline(){localStorage.setItem('pipeline',JSON.stringify(pipeline));}
+function clearPipeline(){if(!confirm('Clear pipeline?'))return;pipeline=[];savePipeline();renderPipeline();toast('Pipeline cleared.');}
+function filterPipeline(f,el){pipelineFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderPipeline();}
+
+const statusLabel={prospecting:'Prospecting',contacted:'Contacted',interested:'Interested',won:'Won',lost:'Lost'};
+function renderPipeline(){
+  document.getElementById('s-total').textContent=pipeline.length;
+  document.getElementById('s-prospect').textContent=pipeline.filter(a=>a.status==='prospecting').length;
+  document.getElementById('s-contacted').textContent=pipeline.filter(a=>a.status==='contacted').length;
+  document.getElementById('s-interested').textContent=pipeline.filter(a=>a.status==='interested').length;
+  document.getElementById('s-won').textContent=pipeline.filter(a=>a.status==='won').length;
+  const filtered=pipelineFilter==='all'?pipeline:pipeline.filter(a=>a.status===pipelineFilter);
+  document.getElementById('pipeline-empty').style.display=filtered.length?'none':'block';
+  document.getElementById('pipeline-body').innerHTML=filtered.map(a=>{const i=pipeline.indexOf(a);return`<tr><td style="font-weight:600;">${a.name}</td><td><span class="badge badge-${a.brand==='Hypervant'?'hv':a.brand==='KratomLyte'?'kl':'both'}">${a.brand.toUpperCase()}</span></td><td><select class="status-select" onchange="updateStatus(${i},this.value)">${Object.entries(statusLabel).map(([k,v])=>`<option value="${k}"${a.status===k?' selected':''}>${v}</option>`).join('')}</select></td><td style="color:var(--muted);font-size:12px;">${a.note||'—'}</td><td style="color:var(--muted);font-size:12px;font-family:var(--font-mono);">${a.date||''}</td><td><button class="btn btn-sm btn-danger" onclick="removeFromPipeline(${i})">Remove</button></td></tr>`;}).join('');
+}
+
+function exportCSV(){if(!lastLeads.length){toast('Search for leads first.');return;}downloadCSV([['Business','Address','Phone','Website','Rating','Brand','Type','City']].concat(lastLeads.map(l=>[l.name,l.address,l.phone,l.website,l.rating,l.brand,l.type,l.city])),'leads.csv');}
+function exportPipelineCSV(){if(!pipeline.length){toast('No pipeline data.');return;}downloadCSV([['Business','Brand','Status','Notes','Date']].concat(pipeline.map(a=>[a.name,a.brand,a.status,a.note,a.date])),'pipeline.csv');}
+function downloadCSV(rows,filename){const csv=rows.map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=filename;a.click();toast('CSV downloaded!');}
+
+function saveProfile(){profile={name:document.getElementById('s-name').value.trim()||'[YOUR NAME]',phone:document.getElementById('s-phone').value.trim()||'[YOUR PHONE]',email:document.getElementById('s-email').value.trim()||'[YOUR EMAIL]',title:document.getElementById('s-title').value.trim()||'Sales Director'};localStorage.setItem('profile',JSON.stringify(profile));toast('Profile saved!');}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
