@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>J.A.R.V.I.S. — Supplement Leads Operations</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg:#020A14;--surface:#040F1C;--surface2:#08192E;--surface3:#0C2440;
+  --border:#0F3A5C;--border2:#1A5A8A;
+  --cyan:#00D4FF;--cyan2:#4AF0C4;--cyan-dim:rgba(0,212,255,0.1);--cyan-glow:rgba(0,212,255,0.4);
+  --orange:#F0A84A;--orange-dim:rgba(240,168,74,0.1);
+  --purple:#8B5CF6;--text:#B0D4F0;--text2:#5A8AAA;--text3:#2A4A60;
+  --success:#00FF88;--danger:#FF4444;--radius:3px;
+  --font-hud:'Orbitron',sans-serif;--font-body:'Exo 2',sans-serif;--font-mono:'Share Tech Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);
+  background-image:radial-gradient(circle,rgba(0,212,255,0.04) 1px,transparent 1px);
+  background-size:28px 28px;}
+
+/* Scan line */
+#scan{position:fixed;top:-3px;left:0;width:100%;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(0,212,255,0.5),transparent);
+  animation:scanDown 7s linear infinite;pointer-events:none;z-index:9999;}
+@keyframes scanDown{0%{top:-3px}100%{top:100vh}}
+
+/* Header */
+#header{height:54px;background:var(--surface);border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;padding:0 20px;gap:20px;
+  box-shadow:0 1px 24px rgba(0,212,255,0.06);flex-shrink:0;}
+.logo-hex{width:30px;height:30px;background:var(--cyan-dim);border:1px solid var(--cyan);
+  clip-path:polygon(50% 0%,93.3% 25%,93.3% 75%,50% 100%,6.7% 75%,6.7% 25%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-hud);font-size:9px;font-weight:800;color:var(--cyan);
+  animation:hexGlow 3s ease-in-out infinite;flex-shrink:0;}
+@keyframes hexGlow{0%,100%{box-shadow:0 0 8px var(--cyan-glow)}50%{box-shadow:0 0 20px var(--cyan-glow),0 0 35px rgba(0,212,255,0.2)}}
+.logo-text{font-family:var(--font-hud);font-size:12px;font-weight:700;letter-spacing:.3em;
+  color:var(--cyan);text-shadow:0 0 12px var(--cyan-glow);line-height:1;}
+.logo-sub{font-family:var(--font-mono);font-size:8px;color:var(--text3);letter-spacing:.1em;margin-top:2px;}
+.h-status{display:flex;align-items:center;gap:14px;flex:1;padding-left:10px;}
+.h-dot{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:var(--text2);}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.dot.on{background:var(--success);box-shadow:0 0 6px var(--success);animation:blinkDot 2s ease-in-out infinite;}
+.dot.warn{background:var(--orange);box-shadow:0 0 6px var(--orange);}
+@keyframes blinkDot{0%,100%{opacity:1}50%{opacity:.5}}
+.h-time{font-family:var(--font-mono);font-size:10px;color:var(--text2);letter-spacing:.08em;white-space:nowrap;}
+.h-actions{display:flex;gap:6px;flex-shrink:0;}
+.hbtn{background:transparent;border:1px solid var(--border2);border-radius:var(--radius);
+  color:var(--text2);font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;
+  padding:5px 10px;cursor:pointer;transition:all .15s;text-transform:uppercase;white-space:nowrap;}
+.hbtn:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 8px var(--cyan-dim);}
+.hbtn.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+
+/* Layout */
+#body{display:flex;height:calc(100vh - 54px);overflow:hidden;}
+
+/* Sidebar */
+#sidebar{width:252px;min-width:252px;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
+#sidebar::-webkit-scrollbar{width:3px;}
+#sidebar::-webkit-scrollbar-thumb{background:var(--border2);}
+.sb-section{padding:14px;border-bottom:1px solid var(--border);}
+.sb-label{font-family:var(--font-mono);font-size:8px;letter-spacing:.15em;color:var(--text3);
+  text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sb-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.qbtn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;margin-bottom:3px;
+  background:transparent;border:1px solid var(--border);border-radius:var(--radius);
+  color:var(--text2);font-family:var(--font-body);font-size:12px;font-weight:500;
+  cursor:pointer;text-align:left;transition:all .12s;position:relative;}
+.qbtn::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--cyan);opacity:0;transition:opacity .12s;border-radius:var(--radius) 0 0 var(--radius);}
+.qbtn:hover{border-color:var(--border2);color:var(--text);background:var(--cyan-dim);}
+.qbtn:hover::before{opacity:1;}
+.qbtn.kl:hover{background:var(--orange-dim);border-color:var(--orange);}
+.qbtn.kl::before{background:var(--orange);}
+.qbtn .qi{font-size:13px;flex-shrink:0;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;
+  padding:5px 0;border-bottom:1px solid rgba(15,58,92,.4);}
+.stat-row:last-child{border:none;}
+.stat-lbl{font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;}
+.stat-val{font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--cyan);}
+.stat-val.won{color:var(--success)}.stat-val.lost{color:var(--danger)}.stat-val.warm{color:var(--orange);}
+.brand-row{display:flex;align-items:center;gap:10px;padding:7px 0;}
+.b-hex{width:22px;height:22px;clip-path:polygon(50% 0%,93.3% 25%,93.3% 75%,50% 100%,6.7% 75%,6.7% 25%);
+  display:flex;align-items:center;justify-content:center;font-size:6px;font-family:var(--font-hud);font-weight:800;flex-shrink:0;}
+.b-hex.hv{background:rgba(74,240,196,.15);color:#4AF0C4;}
+.b-hex.kl{background:rgba(240,168,74,.15);color:var(--orange);}
+.b-name{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;}
+.b-name.hv{color:#4AF0C4;}.b-name.kl{color:var(--orange);}
+.b-desc{font-size:9px;color:var(--text3);margin-top:1px;}
+
+/* Chat */
+#chat{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+#messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth;}
+#messages::-webkit-scrollbar{width:4px;}
+#messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.msg{display:flex;gap:11px;max-width:88%;animation:msgIn .25s ease-out;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.avatar{width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:9px;
+  font-family:var(--font-hud);font-weight:700;flex-shrink:0;background:var(--surface2);}
+.avatar.j{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim);animation:hexGlow 3s ease-in-out infinite;}
+.bubble{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:11px 15px;font-size:13.5px;line-height:1.75;flex:1;}
+.msg.jarvis .bubble{border-left:2px solid var(--cyan);}
+.msg.user .bubble{background:var(--surface3);border-color:var(--border2);}
+.msg-hdr{font-family:var(--font-mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;
+  margin-bottom:5px;display:flex;align-items:center;gap:8px;}
+.msg-hdr.j{color:var(--cyan);}
+.msg-hdr.u{color:var(--text3);justify-content:flex-end;}
+.msg-time{color:var(--text3);font-size:7px;}
+.msg-text{color:var(--text);white-space:pre-wrap;word-wrap:break-word;}
+.msg-text strong{color:var(--cyan);}
+.msg-text em{color:var(--orange);font-style:normal;}
+.msg-text code{font-family:var(--font-mono);background:var(--bg);padding:1px 5px;border-radius:2px;color:var(--cyan2);font-size:11px;}
+.msg-acts{display:flex;gap:5px;margin-top:8px;}
+.mact{background:transparent;border:1px solid var(--border);border-radius:var(--radius);
+  color:var(--text3);font-family:var(--font-mono);font-size:8px;padding:3px 8px;
+  cursor:pointer;transition:all .12s;letter-spacing:.06em;}
+.mact:hover{border-color:var(--cyan);color:var(--cyan);}
+
+/* Typing */
+.typing{display:flex;align-items:center;gap:6px;color:var(--text3);font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;}
+.tdots{display:flex;gap:3px;}
+.tdot{width:4px;height:4px;border-radius:50%;background:var(--cyan);
+  animation:tdBounce 1.2s ease-in-out infinite;}
+.tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
+@keyframes tdBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+/* Input */
+#input-area{padding:10px 18px 14px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;}
+.input-wrap{display:flex;gap:8px;align-items:flex-end;background:var(--surface2);
+  border:1px solid var(--border2);border-radius:var(--radius);padding:8px 10px;transition:border-color .15s;}
+.input-wrap:focus-within{border-color:var(--cyan);box-shadow:0 0 0 1px rgba(0,212,255,.08);}
+#chat-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);
+  font-family:var(--font-body);font-size:14px;resize:none;min-height:22px;max-height:110px;
+  line-height:1.5;padding:0;}
+#chat-input::placeholder{color:var(--text3);font-style:italic;}
+.ibtn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:transparent;
+  color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;}
+.ibtn:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim);}
+.ibtn.mic.on{border-color:var(--danger);color:var(--danger);background:rgba(255,68,68,.1);
+  animation:micPulse 1s ease-in-out infinite;}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(255,68,68,0)}}
+.ibtn.send{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+.ibtn.send:hover{background:var(--cyan);color:var(--bg);}
+.input-hint{font-family:var(--font-mono);font-size:8px;color:var(--text3);text-align:center;margin-top:5px;letter-spacing:.07em;}
+
+/* Settings modal */
+#modal{position:fixed;inset:0;background:rgba(2,10,20,.92);backdrop-filter:blur(4px);
+  z-index:1000;display:none;align-items:center;justify-content:center;}
+#modal.show{display:flex;}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:28px;
+  width:460px;max-width:92vw;box-shadow:0 0 50px rgba(0,212,255,.08);animation:mIn .2s ease-out;}
+@keyframes mIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-family:var(--font-hud);font-size:13px;font-weight:700;letter-spacing:.2em;
+  color:var(--cyan);margin-bottom:22px;display:flex;align-items:center;gap:9px;}
+.modal-title::before{content:'⬡';font-size:15px;}
+.mfield{margin-bottom:14px;}
+.mlbl{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;color:var(--text3);
+  text-transform:uppercase;margin-bottom:5px;}
+.minput{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);
+  color:var(--text);font-family:var(--font-mono);font-size:12px;padding:9px 11px;outline:none;transition:border-color .15s;}
+.minput:focus{border-color:var(--cyan);}
+.minput-hint{font-size:9px;color:var(--text3);margin-top:4px;font-family:var(--font-mono);}
+.mrow{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.toggle{width:34px;height:18px;background:var(--surface3);border:1px solid var(--border2);
+  border-radius:9px;position:relative;transition:all .2s;cursor:pointer;flex-shrink:0;}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;
+  background:var(--text3);border-radius:50%;transition:all .2s;}
+.toggle.on{background:var(--cyan-dim);border-color:var(--cyan);}
+.toggle.on::after{left:18px;background:var(--cyan);}
+.toggle-lbl{font-family:var(--font-mono);font-size:10px;color:var(--text2);}
+.model-select{display:flex;gap:6px;margin-top:6px;}
+.model-opt{flex:1;padding:7px 10px;background:transparent;border:1px solid var(--border);border-radius:var(--radius);
+  color:var(--text3);font-family:var(--font-mono);font-size:9px;cursor:pointer;text-align:center;transition:all .12s;letter-spacing:.06em;}
+.model-opt:hover{border-color:var(--border2);color:var(--text2);}
+.model-opt.sel{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+.mactions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+.mbtn{padding:8px 18px;border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s;border:1px solid var(--border2);
+  background:transparent;color:var(--text2);}
+.mbtn:hover{border-color:var(--text2);color:var(--text);}
+.mbtn.primary{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+.mbtn.primary:hover{background:var(--cyan);color:var(--bg);}
+
+/* Toast */
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(14px);
+  background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);
+  padding:9px 18px;font-family:var(--font-mono);font-size:10px;color:var(--cyan);
+  letter-spacing:.08em;opacity:0;transition:all .2s;z-index:9998;white-space:nowrap;
+  box-shadow:0 0 20px rgba(0,212,255,.1);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+@media(max-width:700px){#sidebar{display:none;}}
+</style>
+</head>
+<body>
+<div id="scan"></div>
+
+<div id="header">
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <div class="logo-hex">J</div>
+    <div>
+      <div class="logo-text">J·A·R·V·I·S</div>
+      <div class="logo-sub">SUPPLEMENT LEADS OPS // v3.0</div>
+    </div>
+  </div>
+  <div class="h-status">
+    <div class="h-dot"><div class="dot on"></div><span>ONLINE</span></div>
+    <div class="h-dot"><div class="dot" id="api-dot"></div><span id="api-lbl">NO API KEY</span></div>
+    <div class="h-dot"><div class="dot on" style="background:#4AF0C4;box-shadow:0 0 6px #4AF0C4;animation:blinkDot 2s ease-in-out infinite;"></div><span style="color:#4AF0C4;">HYPERVANT</span></div>
+    <div class="h-dot"><div class="dot on" style="background:var(--orange);box-shadow:0 0 6px var(--orange);animation:blinkDot 2s ease-in-out infinite;animation-delay:.5s;"></div><span style="color:var(--orange);">KRATOMLYTE</span></div>
+  </div>
+  <div class="h-time"><span id="h-date"></span>&nbsp;&nbsp;<span id="h-time"></span></div>
+  <div class="h-actions">
+    <button class="hbtn" id="voice-btn" onclick="toggleVoice()">🔇 VOICE</button>
+    <button class="hbtn" onclick="clearChat()">CLEAR</button>
+    <button class="hbtn" onclick="openSettings()">⚙ CONFIG</button>
+  </div>
+</div>
+
+<div id="body">
+  <div id="sidebar">
+    <div class="sb-section">
+      <div class="sb-label">Quick Operations</div>
+      <button class="qbtn" onclick="qa('pipeline')"><span class="qi">📊</span>Pipeline Analysis</button>
+      <button class="qbtn" onclick="qa('strategy')"><span class="qi">🎯</span>Today's Strategy</button>
+      <button class="qbtn" onclick="qa('targets')"><span class="qi">🔍</span>Top Lead Targets</button>
+      <button class="qbtn" onclick="qa('hv')"><span class="qi">⚡</span>Hypervant Outreach</button>
+      <button class="qbtn kl" onclick="qa('kl')"><span class="qi">🌿</span>KratomLyte Outreach</button>
+      <button class="qbtn" onclick="qa('objections')"><span class="qi">🛡</span>Objection Scripts</button>
+      <button class="qbtn" onclick="qa('followup')"><span class="qi">↩</span>Follow-Up Templates</button>
+      <button class="qbtn" onclick="qa('close')"><span class="qi">🤝</span>Closing Techniques</button>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Pipeline Status</div>
+      <div class="stat-row"><span class="stat-lbl">Total Accounts</span><span class="stat-val" id="s-total">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Prospecting</span><span class="stat-val" id="s-pros">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Contacted</span><span class="stat-val" id="s-cont">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Interested</span><span class="stat-val warm" id="s-int">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Won</span><span class="stat-val won" id="s-won">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Lost</span><span class="stat-val lost" id="s-lost">—</span></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Active Brands</div>
+      <div class="brand-row">
+        <div class="b-hex hv">HV</div>
+        <div><div class="b-name hv">HYPERVANT</div><div class="b-desc">Stimulant-free performance</div></div>
+      </div>
+      <div class="brand-row">
+        <div class="b-hex kl">KL</div>
+        <div><div class="b-name kl">KRATOMLYTE</div><div class="b-desc">Botanical drink mixes</div></div>
+      </div>
+    </div>
+    <div class="sb-section" style="border:none;">
+      <div class="sb-label">System Links</div>
+      <button class="qbtn" onclick="window.open('index.html','_blank')"><span class="qi">↗</span>Open LeadFinder</button>
+    </div>
+  </div>
+
+  <div id="chat">
+    <div id="messages"></div>
+    <div id="input-area">
+      <div class="input-wrap">
+        <textarea id="chat-input" rows="1" placeholder="Ask J.A.R.V.I.S. anything…" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="ibtn mic" id="mic-btn" onclick="toggleMic()" title="Voice input">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+        <button class="ibtn send" onclick="sendMsg()" title="Send">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-hint">ENTER to send · SHIFT+ENTER for newline · mic button for voice input</div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
+<div id="modal">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">System Configuration</div>
+    <div class="mfield">
+      <div class="mlbl">Anthropic API Key</div>
+      <input class="minput" type="password" id="m-key" placeholder="sk-ant-api03-…" autocomplete="off"/>
+      <div class="minput-hint">Get your key at console.anthropic.com — stored locally only</div>
+    </div>
+    <div class="mfield">
+      <div class="mlbl">Your Name</div>
+      <input class="minput" type="text" id="m-name" placeholder="First name (Jarvis will use this)" autocomplete="off"/>
+    </div>
+    <div class="mfield">
+      <div class="mlbl">Your Title</div>
+      <input class="minput" type="text" id="m-title" placeholder="e.g. CEO, Sales Director"/>
+    </div>
+    <div class="mfield">
+      <div class="mlbl">AI Model</div>
+      <div class="model-select" id="model-select">
+        <div class="model-opt sel" onclick="selectModel('claude-opus-4-8',this)">OPUS 4 <br><span style="font-size:7px;opacity:.7;">MAX QUALITY</span></div>
+        <div class="model-opt" onclick="selectModel('claude-sonnet-4-6',this)">SONNET 4.6 <br><span style="font-size:7px;opacity:.7;">BALANCED</span></div>
+        <div class="model-opt" onclick="selectModel('claude-haiku-4-5-20251001',this)">HAIKU 4.5 <br><span style="font-size:7px;opacity:.7;">FASTEST</span></div>
+      </div>
+    </div>
+    <div class="mfield">
+      <div class="mlbl">Voice Output</div>
+      <div class="mrow" onclick="toggleVoiceSetting()">
+        <div class="toggle" id="voice-toggle"></div>
+        <span class="toggle-lbl" id="voice-lbl">Disabled</span>
+      </div>
+    </div>
+    <div class="mactions">
+      <button class="mbtn" onclick="closeSettings()">Cancel</button>
+      <button class="mbtn primary" onclick="saveSettings()">Save Configuration</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let apiKey    = localStorage.getItem('j_key')    || '';
+let userName  = localStorage.getItem('j_name')   || '';
+let userTitle = localStorage.getItem('j_title')  || '';
+let model     = localStorage.getItem('j_model')  || 'claude-opus-4-8';
+let voice     = localStorage.getItem('j_voice')  === 'true';
+let history   = []; // {role, content}
+let busy      = false;
+let listening = false;
+let reco      = null;
+let voices    = [];
+
+// ── System Prompt ─────────────────────────────────────────────────────────────
+function buildPrompt() {
+  const p    = getPipeline();
+  const lf   = getLFProfile();
+  const name = userName || lf.name || 'sir';
+  const addr = userName ? userName.split(' ')[0] : 'sir';
+
+  return `You are J.A.R.V.I.S. (Just A Rather Very Intelligent System), the AI operations center for Supplement Leads — a company with two consumer brands: Hypervant and KratomLyte. You serve ${name}${userTitle ? ', ' + userTitle : ''}.
+
+## IDENTITY
+You ARE J.A.R.V.I.S. — never say "As an AI" or "I'm just an assistant." Address the user as "${addr}". Be professional, precise, and efficient. Occasional dry wit is appropriate. Use phrases like "Certainly, ${addr}", "Right away", "I've analyzed the data and…", "Shall I proceed?"
+
+## BRANDS
+
+### HYPERVANT
+- Stimulant-free performance drink sticks
+- SKUs: **OXYGEN** (endurance + VO₂ support) · **CLARITY** (calm mental focus)
+- Zero sugar, zero caffeine, clean label — stackable with any existing regimen
+- Retail $22.99 / 10-stick box · Strong wholesale margins · Low MOQ · 30-day risk-free program · Samples available
+- Target accounts: MMA/BJJ gyms, CrossFit boxes, boxing gyms, tactical/military supply, health food stores, vitamin shops
+
+### KRATOMLYTE
+- Flavored botanical drink mixes — single-serve stick packs
+- Botanicals: Kratom, Kava, Kanna, Neuro Leaf
+- Water-soluble, instant mix, no grit, no bitterness, premium flavors — 21+ product
+- Strong wholesale margins · Low MOQ · Samples available
+- Target accounts: Smoke shops, kava bars, health food stores, vitamin shops, wellness boutiques
+
+## PIPELINE DATA (live)
+${JSON.stringify(p, null, 2)}
+
+## USER PROFILE (from LeadFinder)
+Name: ${lf.name || name} · Phone: ${lf.phone || '[not set]'} · Email: ${lf.email || '[not set]'} · Title: ${lf.title || userTitle || 'Sales Director'}
+
+## CAPABILITIES
+- Write cold outreach (email, SMS, LinkedIn, walk-in scripts) for any account type
+- Sales strategy and market targeting
+- Pipeline analysis and conversion coaching
+- Objection-handling scripts
+- Lead prioritization and follow-up planning
+- Product knowledge and competitive positioning
+
+## OUTREACH RULES
+1. Short — decision-makers are busy
+2. Lead with THEIR benefit, not our product
+3. Always offer samples before asking for commitment
+4. Personalize to business type
+5. Clear, low-friction CTA
+6. Sign off: ${lf.name || name} | ${lf.phone || '[phone]'}
+
+## FORMAT
+- **Bold** for key points · short paragraphs · ready-to-use outreach · numbered/bulleted lists
+- Lead with the answer, elaborate after`;
+}
+
+function getPipeline() {
+  try {
+    const d = JSON.parse(localStorage.getItem('pipeline') || '[]');
+    return {
+      total: d.length,
+      prospecting: d.filter(a => a.status === 'prospecting').length,
+      contacted:   d.filter(a => a.status === 'contacted').length,
+      interested:  d.filter(a => a.status === 'interested').length,
+      won:         d.filter(a => a.status === 'won').length,
+      lost:        d.filter(a => a.status === 'lost').length,
+      recentAccounts: d.slice(-5).map(a => ({ name: a.name, brand: a.brand, status: a.status, note: a.note })),
+    };
+  } catch { return { total: 0 }; }
+}
+
+function getLFProfile() {
+  try { return JSON.parse(localStorage.getItem('profile') || '{}'); }
+  catch { return {}; }
+}
+
+// ── Clock & Stats ─────────────────────────────────────────────────────────────
+function tick() {
+  const now = new Date();
+  const d = document.getElementById('h-date');
+  const t = document.getElementById('h-time');
+  if (d) d.textContent = now.toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+  if (t) t.textContent = now.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+
+function refreshStats() {
+  const p = getPipeline();
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set('s-total', p.total); set('s-pros', p.prospecting || 0); set('s-cont', p.contacted || 0);
+  set('s-int', p.interested || 0); set('s-won', p.won || 0); set('s-lost', p.lost || 0);
+}
+
+function updateApiDot() {
+  const dot = document.getElementById('api-dot');
+  const lbl = document.getElementById('api-lbl');
+  if (!dot || !lbl) return;
+  if (apiKey) {
+    dot.className = 'dot on'; lbl.textContent = 'CLAUDE ONLINE'; lbl.style.color = 'var(--success)';
+  } else {
+    dot.className = 'dot warn'; lbl.textContent = 'NO API KEY'; lbl.style.color = 'var(--orange)';
+  }
+}
+
+// ── Messages ──────────────────────────────────────────────────────────────────
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function fmt(text) {
+  return esc(text)
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+function nowTime() {
+  return new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+}
+
+function addMsg(role, content) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  if (role === 'jarvis') {
+    div.innerHTML = `
+      <div class="avatar j">J</div>
+      <div class="bubble">
+        <div class="msg-hdr j">J.A.R.V.I.S. <span class="msg-time">${nowTime()}</span></div>
+        <div class="msg-text">${fmt(content)}</div>
+        <div class="msg-acts">
+          <button class="mact" onclick="copyBubble(this)">COPY</button>
+          <button class="mact" onclick="speakBubble(this)">SPEAK</button>
+        </div>
+      </div>`;
+  } else {
+    div.innerHTML = `
+      <div class="bubble">
+        <div class="msg-hdr u">${esc(userName || 'OPERATOR')} <span class="msg-time">${nowTime()}</span></div>
+        <div class="msg-text">${esc(content)}</div>
+      </div>
+      <div class="avatar">${(userName || 'U')[0].toUpperCase()}</div>`;
+  }
+
+  msgs.appendChild(div);
+  scroll();
+  return div;
+}
+
+function addStreamBubble() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg jarvis';
+  div.innerHTML = `
+    <div class="avatar j">J</div>
+    <div class="bubble">
+      <div class="msg-hdr j">J.A.R.V.I.S. <span class="msg-time">${nowTime()}</span></div>
+      <div class="msg-text stream-text">
+        <div class="typing">
+          <div class="tdots"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
+          <span style="margin-left:6px;font-size:8px;letter-spacing:.1em;">PROCESSING REQUEST…</span>
+        </div>
+      </div>
+    </div>`;
+  msgs.appendChild(div);
+  scroll();
+  return div.querySelector('.stream-text');
+}
+
+function finalizeStreamBubble(textEl, fullText) {
+  textEl.innerHTML = fmt(fullText);
+  const acts = document.createElement('div');
+  acts.className = 'msg-acts';
+  acts.innerHTML = `<button class="mact" onclick="copyBubble(this)">COPY</button><button class="mact" onclick="speakBubble(this)">SPEAK</button>`;
+  textEl.closest('.bubble').appendChild(acts);
+}
+
+function copyBubble(btn) {
+  const text = btn.closest('.bubble').querySelector('.msg-text').innerText;
+  navigator.clipboard.writeText(text).then(() => toast('Copied'));
+}
+function speakBubble(btn) {
+  const text = btn.closest('.bubble').querySelector('.msg-text').innerText;
+  speak(text);
+}
+
+function scroll() {
+  const m = document.getElementById('messages');
+  m.scrollTop = m.scrollHeight;
+}
+
+// ── API Call (streaming) ──────────────────────────────────────────────────────
+async function callJarvis(userMsg) {
+  if (!apiKey) {
+    addMsg('jarvis', `I'm unable to proceed without an API key, sir. Please tap **⚙ CONFIG** in the top right to add your Anthropic API key. Once configured, I'll be fully operational.`);
+    return;
+  }
+
+  if (busy) return;
+  busy = true;
+
+  history.push({ role: 'user', content: userMsg });
+
+  const streamEl = addStreamBubble();
+  let fullText = '';
+  let firstChunk = true;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 2048,
+        stream: true,
+        system: buildPrompt(),
+        messages: history,
+      }),
+    });
+
+    if (!res.ok) {
+      let errMsg = `HTTP ${res.status}`;
+      try { const j = await res.json(); errMsg = j.error?.message || errMsg; } catch {}
+      throw new Error(errMsg);
+    }
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t.startsWith('data: ')) continue;
+        const data = t.slice(6);
+        if (data === '[DONE]') continue;
+        try {
+          const ev = JSON.parse(data);
+          if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') {
+            if (firstChunk) { streamEl.textContent = ''; firstChunk = false; }
+            fullText += ev.delta.text;
+            streamEl.textContent = fullText;
+            scroll();
+          }
+        } catch {}
+      }
+    }
+
+    finalizeStreamBubble(streamEl, fullText);
+    history.push({ role: 'assistant', content: fullText });
+
+    if (voice && fullText) {
+      const preview = fullText.length > 400 ? fullText.substring(0, 397) + '…' : fullText;
+      speak(preview.replace(/\*\*/g, '').replace(/\*/g, ''));
+    }
+
+  } catch (err) {
+    streamEl.innerHTML = `<span style="color:var(--danger)">System error: ${esc(err.message)}</span>\n\nPlease verify your API key in ⚙ CONFIG.`;
+  }
+
+  busy = false;
+}
+
+// ── Send ──────────────────────────────────────────────────────────────────────
+async function sendMsg() {
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if (!text || busy) return;
+  inp.value = '';
+  autoResize(inp);
+  addMsg('user', text);
+  await callJarvis(text);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+}
+
+// ── Quick Actions ─────────────────────────────────────────────────────────────
+const QA = {
+  pipeline:  'Give me a full pipeline analysis. Review all stages, identify which accounts are stalling, and tell me exactly what I should focus on today to maximize closings. Be specific and direct.',
+  strategy:  'Give me today\'s complete sales strategy brief for both Hypervant and KratomLyte. Which account types am I targeting, what\'s my key message for each, and what are my top 3 priority actions right now?',
+  targets:   'What are the highest-value lead target types I should be pursuing for both Hypervant and KratomLyte? Give me the ideal prospect profile, where to find them, and what makes each a strong opportunity.',
+  hv:        'I need to write Hypervant outreach. Ask me for the business name and type, then generate a complete cold email, text message, and walk-in script — ready to use.',
+  kl:        'I need to write KratomLyte outreach. Ask me for the business name and type, then generate a complete cold email, text message, and walk-in script — ready to use.',
+  objections:'Give me the best objection-handling scripts for both brands. Cover these objections: "We already carry something similar", "I need to think about it", "The margins aren\'t good enough", "I need to talk to my partner", and "I\'m not interested right now." Make them conversational, not pushy.',
+  followup:  'Write a complete follow-up sequence for both brands: the 3-day follow-up after first contact, the 7-day follow-up if no response, and the 30-day reconnect. Make them feel human and warm.',
+  close:     'Give me the most effective closing techniques for B2B wholesale accounts — specifically for getting a gym owner or smoke shop to place their first wholesale order. Include trial close language and how to handle last-minute hesitation.',
+};
+
+function qa(key) {
+  const prompt = QA[key];
+  if (!prompt) return;
+  document.getElementById('chat-input').value = prompt;
+  sendMsg();
+}
+
+// ── Voice Output ──────────────────────────────────────────────────────────────
+function loadVoices() { voices = window.speechSynthesis?.getVoices() || []; }
+if (window.speechSynthesis) { window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); }
+
+function speak(text) {
+  if (!voice || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  const v = voices.find(v => v.name === 'Google UK English Male')
+         || voices.find(v => v.name.includes('Daniel'))
+         || voices.find(v => v.lang === 'en-GB')
+         || voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
+         || voices.find(v => v.lang.startsWith('en'));
+  if (v) utt.voice = v;
+  utt.rate = 0.88; utt.pitch = 0.82; utt.volume = 0.9;
+  window.speechSynthesis.speak(utt);
+}
+
+function toggleVoice() {
+  voice = !voice;
+  localStorage.setItem('j_voice', voice);
+  updateVoiceUI();
+  toast(voice ? 'Voice output enabled' : 'Voice output disabled');
+}
+
+function updateVoiceUI() {
+  const btn = document.getElementById('voice-btn');
+  if (btn) { btn.textContent = voice ? '🔊 VOICE ON' : '🔇 VOICE OFF'; btn.classList.toggle('active', voice); }
+  const tog = document.getElementById('voice-toggle');
+  const lbl = document.getElementById('voice-lbl');
+  if (tog) tog.className = `toggle${voice ? ' on' : ''}`;
+  if (lbl) lbl.textContent = voice ? 'Enabled' : 'Disabled';
+}
+
+function toggleVoiceSetting() {
+  voice = !voice;
+  localStorage.setItem('j_voice', voice);
+  updateVoiceUI();
+}
+
+// ── Voice Input ───────────────────────────────────────────────────────────────
+function initReco() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  reco = new SR();
+  reco.continuous = false;
+  reco.interimResults = true;
+  reco.lang = 'en-US';
+  reco.onresult = e => {
+    const t = Array.from(e.results).map(r => r[0].transcript).join('');
+    document.getElementById('chat-input').value = t;
+    if (e.results[0].isFinal) { stopMic(); sendMsg(); }
+  };
+  reco.onend = () => { listening = false; document.getElementById('mic-btn').classList.remove('on'); };
+  reco.onerror = e => {
+    listening = false; document.getElementById('mic-btn').classList.remove('on');
+    if (e.error !== 'no-speech') toast('Mic error: ' + e.error);
+  };
+}
+
+function toggleMic() {
+  if (!reco) { toast('Voice recognition not available in this browser'); return; }
+  if (listening) { try { reco.stop(); } catch {} }
+  else {
+    try {
+      reco.start(); listening = true;
+      document.getElementById('mic-btn').classList.add('on');
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      toast('Listening…');
+    } catch { toast('Could not start microphone'); }
+  }
+}
+
+function stopMic() {
+  try { reco.stop(); } catch {}
+  listening = false;
+  document.getElementById('mic-btn').classList.remove('on');
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('m-key').value = apiKey;
+  document.getElementById('m-name').value = userName;
+  document.getElementById('m-title').value = userTitle;
+  // Highlight selected model
+  document.querySelectorAll('.model-opt').forEach(opt => {
+    const m2 = opt.getAttribute('data-model');
+    opt.classList.toggle('sel', m2 === model);
+  });
+  updateVoiceUI();
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeSettings() { document.getElementById('modal').classList.remove('show'); }
+
+function selectModel(m, el) {
+  model = m; localStorage.setItem('j_model', m);
+  document.querySelectorAll('.model-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function saveSettings() {
+  const k = document.getElementById('m-key').value.trim();
+  const n = document.getElementById('m-name').value.trim();
+  const t = document.getElementById('m-title').value.trim();
+  if (k) { apiKey = k; localStorage.setItem('j_key', k); }
+  userName = n; localStorage.setItem('j_name', n);
+  userTitle = t; localStorage.setItem('j_title', t);
+  updateApiDot();
+  closeSettings();
+  toast('Configuration saved');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._to); t._to = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Clear ─────────────────────────────────────────────────────────────────────
+function clearChat() {
+  if (!confirm('Clear conversation history?')) return;
+  document.getElementById('messages').innerHTML = '';
+  history = [];
+  greet();
+}
+
+// ── Set model-opt data attributes ─────────────────────────────────────────────
+function initModelOpts() {
+  const models = ['claude-opus-4-8','claude-sonnet-4-6','claude-haiku-4-5-20251001'];
+  document.querySelectorAll('.model-opt').forEach((el, i) => {
+    el.setAttribute('data-model', models[i]);
+    el.classList.toggle('sel', models[i] === model);
+    el.onclick = () => selectModel(models[i], el);
+  });
+}
+
+// ── Greeting ──────────────────────────────────────────────────────────────────
+function greet() {
+  const h = new Date().getHours();
+  const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const addr = userName ? ', ' + userName.split(' ')[0] : ', sir';
+  const p = getPipeline();
+
+  let pNote = p.total > 0
+    ? `Your pipeline shows **${p.total} accounts** — ${p.interested} interested, ${p.won} closed. `
+    : `Your pipeline is currently empty — I can help you build a lead generation strategy right now. `;
+
+  const msg = `${greeting}${addr}. J.A.R.V.I.S. is online and all systems are operational.\n\n${pNote}I'm fully briefed on both **Hypervant** and **KratomLyte**. You can use the quick action buttons on the left, or simply tell me what you need.\n\nHow can I assist you today?`;
+
+  setTimeout(() => {
+    addMsg('jarvis', msg);
+    if (voice) speak(`${greeting}${addr}. J.A.R.V.I.S. is online and ready to assist.`);
+    if (!apiKey) setTimeout(() => toast('Add your Anthropic API key in ⚙ CONFIG to activate AI'), 1800);
+  }, 600);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+function init() {
+  tick(); setInterval(tick, 1000);
+  refreshStats(); setInterval(refreshStats, 8000);
+  updateApiDot();
+  updateVoiceUI();
+  initReco();
+  initModelOpts();
+  document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeSettings(); });
+  greet();
+}
+
+init();
+</script>
+</body>
+</html>
