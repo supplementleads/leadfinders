@@ -1,6 +1,22 @@
 'use strict';
 require('dotenv').config();
 
+// Windows Notepad saves .env with a BOM — strip it and re-parse manually as fallback
+if (!process.env.ANTHROPIC_API_KEY) {
+  try {
+    const fs  = require('fs');
+    const raw = fs.readFileSync('.env', 'utf8').replace(/^﻿/, '');
+    raw.split(/\r?\n/).forEach(line => {
+      const eq = line.indexOf('=');
+      if (eq > 0) {
+        const k = line.slice(0, eq).trim();
+        const v = line.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+        if (k && !process.env[k]) process.env[k] = v;
+      }
+    });
+  } catch {}
+}
+
 const express = require('express');
 const path    = require('path');
 const app     = express();

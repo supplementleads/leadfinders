@@ -13,6 +13,8 @@
   --orange:#F0A84A;--orange-dim:rgba(240,168,74,0.1);
   --green:#00FF88;--green-dim:rgba(0,255,136,0.1);
   --purple:#A084F0;--purple-dim:rgba(160,132,240,0.1);
+  --vyce:#C084FC;--vyce-dim:rgba(192,132,252,0.1);
+  --bluhr:#38BDF8;--bluhr-dim:rgba(56,189,248,0.1);
   --text:#B0D4F0;--text2:#5A8AAA;--text3:#2A4A60;
   --danger:#FF4444;--radius:3px;
   --font-hud:'Orbitron',sans-serif;--font-body:'Exo 2',sans-serif;--font-mono:'Share Tech Mono',monospace;
@@ -83,6 +85,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);
 .qbtn.rsch::before{background:var(--purple);}
 .qbtn.grn:hover{background:var(--green-dim);border-color:var(--green);}
 .qbtn.grn::before{background:var(--green);}
+.qbtn.vyce:hover{background:var(--vyce-dim);border-color:var(--vyce);}
+.qbtn.vyce::before{background:var(--vyce);}
+.qbtn.bluhr:hover{background:var(--bluhr-dim);border-color:var(--bluhr);}
+.qbtn.bluhr::before{background:var(--bluhr);}
 .qi{font-size:12px;flex-shrink:0;}
 .stat-row{display:flex;justify-content:space-between;align-items:center;
   padding:5px 0;border-bottom:1px solid rgba(15,58,92,.4);}
@@ -238,7 +244,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);
     <div class="logo-hex">J</div>
     <div>
       <div class="logo-text">J·A·R·V·I·S</div>
-      <div class="logo-sub">SUPPLEMENT LEADS OPS // v2.0</div>
+      <div class="logo-sub">HYPERVANT · KRATOMLYTE · VYCE · BLUHR</div>
     </div>
   </div>
   <div class="hst">
@@ -246,7 +252,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);
     <div class="hdot"><div class="dot" id="api-dot"></div><span id="api-lbl">CONNECTING</span></div>
     <div class="hdot"><div class="dot" id="ws-dot"></div><span id="ws-lbl">WEB SEARCH</span></div>
     <div class="hdot"><div class="dot on" style="background:#4AF0C4;box-shadow:0 0 6px #4AF0C4;animation:blinkDot 2s ease-in-out infinite;"></div><span style="color:#4AF0C4;">HYPERVANT</span></div>
-    <div class="hdot"><div class="dot on" style="background:var(--orange);box-shadow:0 0 6px var(--orange);animation:blinkDot 2s ease-in-out infinite;animation-delay:.5s;"></div><span style="color:var(--orange);">KRATOMLYTE</span></div>
+    <div class="hdot"><div class="dot on" style="background:var(--orange);box-shadow:0 0 6px var(--orange);animation:blinkDot 2s ease-in-out infinite;animation-delay:.4s;"></div><span style="color:var(--orange);">KRATOMLYTE</span></div>
+    <div class="hdot"><div class="dot on" style="background:var(--vyce);box-shadow:0 0 6px var(--vyce);animation:blinkDot 2s ease-in-out infinite;animation-delay:.8s;"></div><span style="color:var(--vyce);">VYCE</span></div>
+    <div class="hdot"><div class="dot on" style="background:var(--bluhr);box-shadow:0 0 6px var(--bluhr);animation:blinkDot 2s ease-in-out infinite;animation-delay:1.2s;"></div><span style="color:var(--bluhr);">BLUHR</span></div>
   </div>
   <div class="htime"><span id="hdate"></span>&nbsp;&nbsp;<span id="htime-el"></span></div>
   <div class="hacts">
@@ -271,6 +279,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);
       <button class="qbtn" onclick="qa('strategy')"><span class="qi">🎯</span>Today's Strategy</button>
       <button class="qbtn" onclick="qa('hv')"><span class="qi">⚡</span>Hypervant Outreach</button>
       <button class="qbtn kl" onclick="qa('kl')"><span class="qi">🌿</span>KratomLyte Outreach</button>
+      <button class="qbtn vyce" onclick="qa('vyce')"><span class="qi">💊</span>Vyce Outreach</button>
+      <button class="qbtn bluhr" onclick="qa('bluhr')"><span class="qi">🥥</span>Bluhr Outreach</button>
       <button class="qbtn" onclick="qa('objections')"><span class="qi">🛡</span>Objection Scripts</button>
       <button class="qbtn" onclick="qa('followup')"><span class="qi">↩</span>Follow-Up Templates</button>
       <button class="qbtn" onclick="qa('close')"><span class="qi">🤝</span>Closing Techniques</button>
@@ -302,6 +312,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);
       <div class="slbl">Active Brands</div>
       <div class="brand-row"><div class="bhex hv">HV</div><div><div class="bname hv">HYPERVANT</div><div class="bdesc">Stimulant-free performance</div></div></div>
       <div class="brand-row"><div class="bhex kl">KL</div><div><div class="bname kl">KRATOMLYTE</div><div class="bdesc">Botanical drink mixes</div></div></div>
+      <div class="brand-row"><div class="bhex" style="background:rgba(192,132,252,.15);color:var(--vyce);">VC</div><div><div class="bname" style="color:var(--vyce);">VYCE</div><div class="bdesc">Botanical mouth pouches</div></div></div>
+      <div class="brand-row"><div class="bhex" style="background:rgba(56,189,248,.15);color:var(--bluhr);">BL</div><div><div class="bname" style="color:var(--bluhr);">BLUHR</div><div class="bdesc">Kava drink mix</div></div></div>
     </div>
 
     <div class="ss" style="border:none;">
@@ -473,6 +485,20 @@ You ARE J.A.R.V.I.S. — never say "As an AI." Address the user as "${addr}". Pr
 - Water-soluble, instant mix, no grit, no bitterness, premium flavors — 21+ product
 - Strong wholesale margins · Low MOQ · Samples available
 - Target accounts: Smoke shops, kava bars, health food stores, vitamin shops, wellness boutiques, CBD shops, yoga studios
+
+### VYCE
+- Botanical mouth pouches — smoke-free, spit-free, discreet
+- Premium alternative to nicotine pouches using botanicals (kratom, kava, CBD, kanna, etc.)
+- Long-lasting, portable, no mess — just place and enjoy
+- Strong wholesale margins · Low MOQ · Samples available
+- Target accounts: Smoke shops, vape shops, CBD stores, tobacco retailers, gas stations with premium sections, kratom specialty stores, convenience stores
+
+### BLUHR (bluhrkava.com)
+- Premium kava drink mix — powder/stick pack format
+- Smooth, authentic kava experience you can make anywhere
+- No bitterness, easy to mix, premium taste
+- Strong wholesale margins · Low MOQ · Samples available
+- Target accounts: Kava bars, smoke shops, wellness boutiques, yoga studios, health food stores, vitamin shops, CBD stores, online/DTC
 
 ## PIPELINE DATA (live)
 ${JSON.stringify(p, null, 2)}
@@ -871,6 +897,8 @@ const QA = {
   strategy:  "Give me today's complete sales strategy brief for both Hypervant and KratomLyte. Which account types am I targeting, what's my key message for each, and what are my top 3 priority actions right now?",
   hv:        "I need to write Hypervant outreach. Ask me for the business name and type, then generate a complete cold email, text message, and walk-in script — ready to use.",
   kl:        "I need to write KratomLyte outreach. Ask me for the business name and type, then generate a complete cold email, text message, and walk-in script — ready to use.",
+  vyce:      "I need to write Vyce outreach. Ask me for the business name and type, then generate a complete cold email, text message, and walk-in script for our botanical mouth pouch brand — ready to use.",
+  bluhr:     "I need to write Bluhr outreach. Ask me for the business name and type, then generate a complete cold email, text message, and walk-in script for our Bluhr kava drink mix — ready to use.",
   objections:"Give me the best objection-handling scripts for both brands. Cover: 'We already carry something similar', 'I need to think about it', 'The margins aren't good enough', 'I need to talk to my partner', 'I'm not interested right now.' Make them conversational.",
   followup:  'Write a complete follow-up sequence for both brands: 3-day follow-up after first contact, 7-day if no response, 30-day reconnect. Feel human, not salesy.',
   close:     'Give me the most effective closing techniques for B2B wholesale accounts — specifically to get a gym owner or smoke shop to place their first wholesale order. Include trial close language.',
@@ -1001,7 +1029,7 @@ function greet(){
   const mode=backendMode?'**Backend mode active** — live web search available via the 📡 Market Intelligence panel. ':'**Direct mode** — run via start.bat / start.sh for live web search capabilities. ';
 
   setTimeout(()=>{
-    addMsg('assistant',`${g}${a}. J.A.R.V.I.S. is online and all systems are operational.\n\n${pNote}\n${mode}I'm fully briefed on **Hypervant** and **KratomLyte**. Use the sidebar quick actions or tell me what you need.\n\nHow can I assist you today?`,false);
+    addMsg('assistant',`${g}${a}. J.A.R.V.I.S. is online and all systems are operational.\n\n${pNote}\n${mode}I'm fully briefed on all four brands: **Hypervant**, **KratomLyte**, **Vyce**, and **Bluhr**. Use the sidebar quick actions or tell me what you need.\n\nHow can I assist you today?`,false);
     if(voiceOn)speak(`${g}${a}. J.A.R.V.I.S. online and ready to assist.`);
     if(!apiKey||apiKey==='')setTimeout(()=>toast('Add your API key in ⚙ CONFIG to activate'),1800);
   },600);
