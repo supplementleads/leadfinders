@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>J.A.R.V.I.S.</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#020A14;--sf:#040F1C;--sf2:#08192E;--sf3:#0C2440;
+  --bd:#0F3A5C;--bd2:#1A5A8A;
+  --cy:#00D4FF;--cy2:#4AF0C4;--cyd:rgba(0,212,255,.1);--cyg:rgba(0,212,255,.4);
+  --hv:#4AF0C4;--hvd:rgba(74,240,196,.1);
+  --kl:#F0A84A;--kld:rgba(240,168,74,.1);
+  --vy:#C084FC;--vyd:rgba(192,132,252,.1);
+  --bl:#38BDF8;--bld:rgba(56,189,248,.1);
+  --gn:#00FF88;--gnd:rgba(0,255,136,.1);
+  --pu:#A084F0;--pud:rgba(160,132,240,.1);
+  --tx:#B0D4F0;--tx2:#5A8AAA;--tx3:#2A4A60;
+  --danger:#FF4444;--r:3px;
+  --fh:'Orbitron',sans-serif;--fb:'Exo 2',sans-serif;--fm:'Share Tech Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--tx);font-family:var(--fb);
+  background-image:radial-gradient(circle,rgba(0,212,255,.04) 1px,transparent 1px);
+  background-size:28px 28px;}
+
+/* Boot screen */
+#boot{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  transition:opacity .8s;}
+#boot.hide{opacity:0;pointer-events:none;}
+.boot-hex{width:80px;height:80px;border:2px solid var(--cy);
+  clip-path:polygon(50% 0%,93.3% 25%,93.3% 75%,50% 100%,6.7% 75%,6.7% 25%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fh);font-size:24px;font-weight:900;color:var(--cy);
+  animation:hexGlow 1.5s ease-in-out infinite;}
+.boot-title{font-family:var(--fh);font-size:18px;font-weight:800;letter-spacing:.4em;color:var(--cy);
+  text-shadow:0 0 20px var(--cyg);}
+.boot-log{font-family:var(--fm);font-size:10px;color:var(--tx3);letter-spacing:.1em;
+  text-align:center;line-height:2.2;min-height:100px;}
+.boot-bar{width:280px;height:2px;background:var(--bd);border-radius:1px;overflow:hidden;}
+.boot-fill{height:100%;background:linear-gradient(90deg,var(--cy),var(--hv));
+  border-radius:1px;transition:width .4s ease-out;}
+
+/* Scan */
+#scan{position:fixed;top:-3px;left:0;width:100%;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(0,212,255,.5),transparent);
+  animation:scanDown 8s linear infinite;pointer-events:none;z-index:9999;}
+@keyframes scanDown{0%{top:-3px}100%{top:100vh}}
+
+/* Header */
+#hdr{height:52px;background:var(--sf);border-bottom:1px solid var(--bd2);
+  display:flex;align-items:center;padding:0 16px;gap:14px;
+  box-shadow:0 1px 24px rgba(0,212,255,.06);flex-shrink:0;}
+.lhex{width:28px;height:28px;background:var(--cyd);border:1px solid var(--cy);
+  clip-path:polygon(50% 0%,93.3% 25%,93.3% 75%,50% 100%,6.7% 75%,6.7% 25%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fh);font-size:8px;font-weight:900;color:var(--cy);
+  animation:hexGlow 3s ease-in-out infinite;flex-shrink:0;}
+@keyframes hexGlow{0%,100%{box-shadow:0 0 8px var(--cyg)}50%{box-shadow:0 0 20px var(--cyg),0 0 35px rgba(0,212,255,.2)}}
+.ltx{font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:.3em;
+  color:var(--cy);text-shadow:0 0 12px var(--cyg);}
+.lsub{font-family:var(--fm);font-size:7px;color:var(--tx3);letter-spacing:.08em;margin-top:2px;}
+.hst{display:flex;align-items:center;gap:10px;flex:1;padding-left:6px;flex-wrap:wrap;}
+.hdot{display:flex;align-items:center;gap:4px;font-family:var(--fm);font-size:8px;color:var(--tx2);}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--tx3);flex-shrink:0;}
+.dot.on{background:var(--gn);box-shadow:0 0 6px var(--gn);animation:blink 2s ease-in-out infinite;}
+.dot.warn{background:var(--kl);box-shadow:0 0 6px var(--kl);}
+.dot.pu{background:var(--pu);box-shadow:0 0 6px var(--pu);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+.htm{font-family:var(--fm);font-size:9px;color:var(--tx2);letter-spacing:.08em;white-space:nowrap;}
+.hact{display:flex;gap:5px;flex-shrink:0;}
+.hbtn{background:transparent;border:1px solid var(--bd2);border-radius:var(--r);
+  color:var(--tx2);font-family:var(--fm);font-size:8px;letter-spacing:.07em;
+  padding:4px 9px;cursor:pointer;transition:all .15s;text-transform:uppercase;white-space:nowrap;}
+.hbtn:hover{border-color:var(--cy);color:var(--cy);}
+.hbtn.on{background:var(--cyd);border-color:var(--cy);color:var(--cy);}
+.hbtn.rm{background:var(--pud);border-color:var(--pu);color:var(--pu);}
+.hbtn.voice-active{background:var(--gnd);border-color:var(--gn);color:var(--gn);
+  animation:voicePulse 2s ease-in-out infinite;}
+@keyframes voicePulse{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,.3)}50%{box-shadow:0 0 0 6px rgba(0,255,136,0)}}
+
+/* Layout */
+#body{display:flex;height:calc(100vh - 52px);overflow:hidden;}
+
+/* Sidebar */
+#sb{width:244px;min-width:244px;background:var(--sf);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
+#sb::-webkit-scrollbar{width:3px;}
+#sb::-webkit-scrollbar-thumb{background:var(--bd2);}
+.ss{padding:11px 12px;border-bottom:1px solid var(--bd);}
+.slbl{font-family:var(--fm);font-size:7px;letter-spacing:.15em;color:var(--tx3);
+  text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.slbl::after{content:'';flex:1;height:1px;background:var(--bd);}
+.qb{display:flex;align-items:center;gap:7px;width:100%;padding:7px 9px;margin-bottom:2px;
+  background:transparent;border:1px solid var(--bd);border-radius:var(--r);
+  color:var(--tx2);font-family:var(--fb);font-size:11px;font-weight:500;
+  cursor:pointer;text-align:left;transition:all .12s;position:relative;}
+.qb::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  opacity:0;transition:opacity .12s;border-radius:var(--r) 0 0 var(--r);}
+.qb:hover{border-color:var(--bd2);color:var(--tx);background:var(--cyd);}
+.qb:hover::before{opacity:1;}
+.qb.hv::before,.qb.hv:hover{background:var(--hvd);border-color:var(--hv);}
+.qb.hv::before{background:var(--hv);}
+.qb.kl:hover{background:var(--kld);border-color:var(--kl);}
+.qb.kl::before{background:var(--kl);}
+.qb.vy:hover{background:var(--vyd);border-color:var(--vy);}
+.qb.vy::before{background:var(--vy);}
+.qb.bl:hover{background:var(--bld);border-color:var(--bl);}
+.qb.bl::before{background:var(--bl);}
+.qb.gn:hover{background:var(--gnd);border-color:var(--gn);}
+.qb.gn::before{background:var(--gn);}
+.qb.pu:hover{background:var(--pud);border-color:var(--pu);}
+.qb.pu::before{background:var(--pu);}
+.qi{font-size:12px;flex-shrink:0;}
+.sr{display:flex;justify-content:space-between;align-items:center;
+  padding:4px 0;border-bottom:1px solid rgba(15,58,92,.4);}
+.sr:last-child{border:none;}
+.sk{font-family:var(--fm);font-size:7px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;}
+.sv{font-family:var(--fm);font-size:13px;font-weight:600;color:var(--cy);}
+.sv.w{color:var(--gn)}.sv.l{color:var(--danger)}.sv.h{color:var(--kl);}
+.br{display:flex;align-items:center;gap:8px;padding:5px 0;}
+.bh{width:20px;height:20px;clip-path:polygon(50% 0%,93.3% 25%,93.3% 75%,50% 100%,6.7% 75%,6.7% 25%);
+  display:flex;align-items:center;justify-content:center;font-size:5px;font-family:var(--fh);font-weight:800;flex-shrink:0;}
+.bn{font-family:var(--fm);font-size:9px;letter-spacing:.08em;text-transform:uppercase;}
+.bd2{font-size:8px;color:var(--tx3);margin-top:1px;}
+
+/* Chat */
+#chat{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#msgs{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;}
+#msgs::-webkit-scrollbar{width:4px;}
+#msgs::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+.msg{display:flex;gap:9px;max-width:91%;animation:msgIn .25s ease-out;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.msg.briefing{max-width:98%;}
+.av{width:28px;height:28px;border-radius:50%;border:1px solid var(--bd2);
+  display:flex;align-items:center;justify-content:center;font-size:9px;
+  font-family:var(--fh);font-weight:700;flex-shrink:0;background:var(--sf2);}
+.av.j{border-color:var(--cy);color:var(--cy);background:var(--cyd);animation:hexGlow 3s ease-in-out infinite;}
+.av.r{border-color:var(--pu);color:var(--pu);background:var(--pud);}
+.av.b{border-color:var(--gn);color:var(--gn);background:var(--gnd);}
+.bbl{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);
+  padding:10px 13px;font-size:13px;line-height:1.75;flex:1;}
+.msg.jarvis .bbl{border-left:2px solid var(--cy);}
+.msg.research .bbl{border-left:2px solid var(--pu);}
+.msg.briefing .bbl{border-left:2px solid var(--gn);background:rgba(0,255,136,.03);}
+.msg.alert .bbl{border-left:2px solid var(--kl);background:rgba(240,168,74,.03);}
+.msg.user .bbl{background:var(--sf3);border-color:var(--bd2);}
+.mh{font-family:var(--fm);font-size:7px;letter-spacing:.12em;text-transform:uppercase;
+  margin-bottom:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.mh.j{color:var(--cy)}.mh.r{color:var(--pu)}.mh.b{color:var(--gn)}.mh.al{color:var(--kl)}
+.mh.u{color:var(--tx3);justify-content:flex-end;}
+.mt{color:var(--tx3);font-size:7px;}
+.badge{font-family:var(--fm);font-size:7px;padding:1px 6px;border-radius:2px;}
+.badge.live{background:var(--pud);border:1px solid var(--pu);color:var(--pu);}
+.badge.brief{background:var(--gnd);border:1px solid var(--gn);color:var(--gn);}
+.badge.alert{background:var(--kld);border:1px solid var(--kl);color:var(--kl);}
+.mtx{color:var(--tx);white-space:pre-wrap;word-wrap:break-word;}
+.mtx strong{color:var(--cy);font-weight:600;}
+.mtx em{color:var(--kl);font-style:normal;}
+.mtx code{font-family:var(--fm);background:var(--bg);padding:1px 5px;border-radius:2px;color:var(--cy2);font-size:11px;}
+.mtx h2,.mtx h3{color:var(--cy);font-family:var(--fh);font-size:10px;letter-spacing:.1em;
+  margin:10px 0 4px;text-transform:uppercase;}
+.mac{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap;}
+.ma{background:transparent;border:1px solid var(--bd);border-radius:var(--r);
+  color:var(--tx3);font-family:var(--fm);font-size:7px;padding:3px 8px;
+  cursor:pointer;transition:all .12s;letter-spacing:.06em;}
+.ma:hover{border-color:var(--cy);color:var(--cy);}
+
+/* Typing */
+.tw{display:flex;align-items:center;gap:6px;color:var(--tx3);font-family:var(--fm);font-size:8px;letter-spacing:.1em;}
+.td{width:4px;height:4px;border-radius:50%;animation:tdB 1.2s ease-in-out infinite;}
+.td.cy{background:var(--cy)}.td.pu{background:var(--pu)}.td.gn{background:var(--gn)}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tdB{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+.spin{width:14px;height:14px;border-radius:50%;border:1px solid var(--pu);
+  border-top-color:transparent;animation:sp .8s linear infinite;flex-shrink:0;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* Input */
+#ia{padding:8px 15px 12px;background:var(--sf);border-top:1px solid var(--bd);flex-shrink:0;}
+.iw{display:flex;gap:6px;align-items:flex-end;background:var(--sf2);
+  border:1px solid var(--bd2);border-radius:var(--r);padding:7px 9px;transition:all .15s;}
+.iw:focus-within{border-color:var(--cy);box-shadow:0 0 0 1px rgba(0,212,255,.07);}
+.iw.rm{border-color:var(--pu);}
+#ci{flex:1;background:transparent;border:none;outline:none;color:var(--tx);
+  font-family:var(--fb);font-size:13px;resize:none;min-height:20px;max-height:100px;
+  line-height:1.5;padding:0;}
+#ci::placeholder{color:var(--tx3);font-style:italic;}
+.ib{width:28px;height:28px;border-radius:50%;border:1px solid var(--bd2);background:transparent;
+  color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;}
+.ib:hover{border-color:var(--cy);color:var(--cy);background:var(--cyd);}
+.ib.mic.on{border-color:var(--danger);color:var(--danger);background:rgba(255,68,68,.1);
+  animation:micP 1s ease-in-out infinite;}
+@keyframes micP{0%,100%{box-shadow:0 0 0 0 rgba(255,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(255,68,68,0)}}
+.ib.snd{background:var(--cyd);border-color:var(--cy);color:var(--cy);}
+.ib.snd:hover{background:var(--cy);color:var(--bg);}
+.ih{font-family:var(--fm);font-size:7px;color:var(--tx3);text-align:center;margin-top:4px;letter-spacing:.07em;}
+
+/* Mode banner */
+#mb{padding:4px 20px;background:var(--pud);border-bottom:1px solid var(--pu);
+  font-family:var(--fm);font-size:8px;color:var(--pu);letter-spacing:.1em;
+  display:none;align-items:center;gap:8px;}
+#mb.show{display:flex;}
+
+/* Settings modal */
+#modal{position:fixed;inset:0;background:rgba(2,10,20,.93);backdrop-filter:blur(4px);
+  z-index:1000;display:none;align-items:center;justify-content:center;}
+#modal.show{display:flex;}
+.mbox{background:var(--sf);border:1px solid var(--bd2);border-radius:4px;padding:24px;
+  width:460px;max-width:93vw;box-shadow:0 0 50px rgba(0,212,255,.07);
+  animation:mIn .2s ease-out;max-height:90vh;overflow-y:auto;}
+@keyframes mIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.mtt{font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:.2em;
+  color:var(--cy);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.mtt::before{content:'⬡';font-size:14px;}
+.mf{margin-bottom:12px;}
+.ml{font-family:var(--fm);font-size:8px;letter-spacing:.12em;color:var(--tx3);
+  text-transform:uppercase;margin-bottom:4px;}
+.mi{width:100%;background:var(--sf2);border:1px solid var(--bd2);border-radius:var(--r);
+  color:var(--tx);font-family:var(--fm);font-size:12px;padding:8px 10px;outline:none;transition:border-color .15s;}
+.mi:focus{border-color:var(--cy);}
+.mhint{font-size:8px;color:var(--tx3);margin-top:3px;font-family:var(--fm);}
+.mopts{display:flex;gap:5px;margin-top:4px;}
+.mopt{flex:1;padding:7px 5px;background:transparent;border:1px solid var(--bd);border-radius:var(--r);
+  color:var(--tx3);font-family:var(--fm);font-size:8px;cursor:pointer;text-align:center;transition:all .12s;}
+.mopt:hover{border-color:var(--bd2);color:var(--tx2);}
+.mopt.sel{background:var(--cyd);border-color:var(--cy);color:var(--cy);}
+.togrow{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.tog{width:32px;height:18px;background:var(--sf3);border:1px solid var(--bd2);
+  border-radius:9px;position:relative;transition:all .2s;flex-shrink:0;}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;
+  background:var(--tx3);border-radius:50%;transition:all .2s;}
+.tog.on{background:var(--cyd);border-color:var(--cy);}
+.tog.on::after{left:16px;background:var(--cy);}
+.tlb{font-family:var(--fm);font-size:10px;color:var(--tx2);}
+.mbtns{display:flex;gap:7px;justify-content:flex-end;margin-top:14px;}
+.mbtn{padding:7px 16px;border-radius:var(--r);font-family:var(--fm);font-size:9px;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s;
+  border:1px solid var(--bd2);background:transparent;color:var(--tx2);}
+.mbtn:hover{border-color:var(--tx2);color:var(--tx);}
+.mbtn.p{background:var(--cyd);border-color:var(--cy);color:var(--cy);}
+.mbtn.p:hover{background:var(--cy);color:var(--bg);}
+.backend-ok{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.25);
+  border-radius:3px;padding:9px 11px;margin-bottom:12px;font-family:var(--fm);
+  font-size:8px;color:var(--gn);display:none;}
+
+#toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--sf);border:1px solid var(--bd2);border-radius:var(--r);
+  padding:8px 16px;font-family:var(--fm);font-size:9px;color:var(--cy);
+  letter-spacing:.08em;opacity:0;transition:all .2s;z-index:9998;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px;}
+@media(max-width:640px){#sb{display:none;}}
+</style>
+</head>
+<body>
+
+<!-- Boot sequence -->
+<div id="boot">
+  <div class="boot-hex">J</div>
+  <div class="boot-title">J·A·R·V·I·S</div>
+  <div class="boot-log" id="boot-log"></div>
+  <div class="boot-bar"><div class="boot-fill" id="boot-fill" style="width:0%"></div></div>
+</div>
+
+<div id="scan"></div>
+
+<div id="hdr">
+  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+    <div class="lhex">J</div>
+    <div>
+      <div class="ltx">J·A·R·V·I·S</div>
+      <div class="lsub">HYPERVANT · KRATOMLYTE · VYCE · BLUHR</div>
+    </div>
+  </div>
+  <div class="hst">
+    <div class="hdot"><div class="dot on"></div><span>ONLINE</span></div>
+    <div class="hdot"><div class="dot" id="api-dot"></div><span id="api-lbl">CONNECTING</span></div>
+    <div class="hdot"><div class="dot" id="ws-dot"></div><span id="ws-lbl" style="color:var(--tx2);">WEB SEARCH</span></div>
+    <div class="hdot"><div class="dot on" style="background:var(--hv);box-shadow:0 0 5px var(--hv);animation:blink 2s ease-in-out infinite;"></div><span style="color:var(--hv);">HV</span></div>
+    <div class="hdot"><div class="dot on" style="background:var(--kl);box-shadow:0 0 5px var(--kl);animation:blink 2s ease-in-out infinite;animation-delay:.3s;"></div><span style="color:var(--kl);">KL</span></div>
+    <div class="hdot"><div class="dot on" style="background:var(--vy);box-shadow:0 0 5px var(--vy);animation:blink 2s ease-in-out infinite;animation-delay:.6s;"></div><span style="color:var(--vy);">VYCE</span></div>
+    <div class="hdot"><div class="dot on" style="background:var(--bl);box-shadow:0 0 5px var(--bl);animation:blink 2s ease-in-out infinite;animation-delay:.9s;"></div><span style="color:var(--bl);">BLUHR</span></div>
+  </div>
+  <div class="htm"><span id="hdate"></span>&nbsp;&nbsp;<span id="htime-el"></span></div>
+  <div class="hact">
+    <button class="hbtn" id="brief-btn" onclick="triggerBriefing()" title="Request morning briefing">☀ BRIEF</button>
+    <button class="hbtn" id="rm-btn" onclick="toggleRM()" title="Live web search mode">📡 RESEARCH</button>
+    <button class="hbtn" id="voice-btn" onclick="toggleVoice()">🔇 VOICE</button>
+    <button class="hbtn" onclick="clearChat()">CLEAR</button>
+    <button class="hbtn" onclick="openSettings()">⚙ CONFIG</button>
+  </div>
+</div>
+
+<div id="body">
+  <div id="sb">
+    <div class="ss">
+      <div class="slbl">Operations</div>
+      <button class="qb" onclick="qa('pipeline')"><span class="qi">📊</span>Pipeline Analysis</button>
+      <button class="qb" onclick="qa('strategy')"><span class="qi">🎯</span>Today's Strategy</button>
+      <button class="qb" onclick="qa('targets')"><span class="qi">🔍</span>Top Lead Targets</button>
+    </div>
+    <div class="ss">
+      <div class="slbl">Outreach by Brand</div>
+      <button class="qb hv" onclick="qa('hv')"><span class="qi">⚡</span>Hypervant Outreach</button>
+      <button class="qb kl" onclick="qa('kl')"><span class="qi">🌿</span>KratomLyte Outreach</button>
+      <button class="qb vy" onclick="qa('vyce')"><span class="qi">💊</span>Vyce Outreach</button>
+      <button class="qb bl" onclick="qa('bluhr')"><span class="qi">🥥</span>Bluhr Outreach</button>
+    </div>
+    <div class="ss">
+      <div class="slbl">Sales Tactics</div>
+      <button class="qb" onclick="qa('objections')"><span class="qi">🛡</span>Objection Scripts</button>
+      <button class="qb" onclick="qa('followup')"><span class="qi">↩</span>Follow-Up Templates</button>
+      <button class="qb" onclick="qa('close')"><span class="qi">🤝</span>Closing Techniques</button>
+    </div>
+    <div class="ss">
+      <div class="slbl">📡 Market Intelligence</div>
+      <button class="qb pu" onclick="research('trends')"><span class="qi">🔭</span>Supplement Trends NOW</button>
+      <button class="qb pu" onclick="research('nonalc')"><span class="qi">🍹</span>Non-Alc Beverage Boom</button>
+      <button class="qb pu" onclick="research('botanicals')"><span class="qi">🌿</span>Botanical Market Report</button>
+      <button class="qb pu" onclick="research('ingredients')"><span class="qi">💊</span>Emerging Ingredients</button>
+      <button class="qb gn" onclick="research('revenue')"><span class="qi">💰</span>Revenue Opportunities</button>
+      <button class="qb pu" onclick="research('distribution')"><span class="qi">🏪</span>New Distribution Channels</button>
+      <button class="qb pu" onclick="research('regulatory')"><span class="qi">⚖️</span>Regulatory Watch</button>
+      <button class="qb pu" onclick="research('competitors')"><span class="qi">🔍</span>Competitive Landscape</button>
+    </div>
+    <div class="ss">
+      <div class="slbl">Pipeline Status</div>
+      <div class="sr"><span class="sk">Total</span><span class="sv" id="s-tot">—</span></div>
+      <div class="sr"><span class="sk">Prospecting</span><span class="sv" id="s-pro">—</span></div>
+      <div class="sr"><span class="sk">Contacted</span><span class="sv" id="s-con">—</span></div>
+      <div class="sr"><span class="sk">Interested</span><span class="sv h" id="s-int">—</span></div>
+      <div class="sr"><span class="sk">Won</span><span class="sv w" id="s-won">—</span></div>
+      <div class="sr"><span class="sk">Lost</span><span class="sv l" id="s-lst">—</span></div>
+    </div>
+    <div class="ss">
+      <div class="slbl">Active Brands</div>
+      <div class="br"><div class="bh" style="background:var(--hvd);color:var(--hv);">HV</div><div><div class="bn" style="color:var(--hv);">HYPERVANT</div><div class="bd2">Stimulant-free performance</div></div></div>
+      <div class="br"><div class="bh" style="background:var(--kld);color:var(--kl);">KL</div><div><div class="bn" style="color:var(--kl);">KRATOMLYTE</div><div class="bd2">Botanical drink mixes</div></div></div>
+      <div class="br"><div class="bh" style="background:var(--vyd);color:var(--vy);">VC</div><div><div class="bn" style="color:var(--vy);">VYCE</div><div class="bd2">Botanical mouth pouches</div></div></div>
+      <div class="br"><div class="bh" style="background:var(--bld);color:var(--bl);">BL</div><div><div class="bn" style="color:var(--bl);">BLUHR</div><div class="bd2">Kava drink mix</div></div></div>
+    </div>
+    <div class="ss" style="border:none;">
+      <div class="slbl">System</div>
+      <button class="qb" onclick="window.open('index.html','_blank')"><span class="qi">↗</span>Open LeadFinder</button>
+    </div>
+  </div>
+
+  <div id="chat">
+    <div id="mb"><div class="spin"></div><span>LIVE WEB SEARCH ACTIVE — JARVIS IS QUERYING THE INTERNET FOR REAL-TIME DATA</span></div>
+    <div id="msgs"></div>
+    <div id="ia">
+      <div class="iw" id="iw">
+        <textarea id="ci" rows="1" placeholder="Talk to J.A.R.V.I.S. …" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="ib mic" id="mic-btn" onclick="toggleMic()" title="Voice input">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+        <button class="ib" id="rm-ibtn" onclick="toggleRM()" title="Research mode" style="border-color:var(--pu);color:var(--pu);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+        <button class="ib snd" onclick="sendMsg()" title="Send">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="ih">ENTER to send · SHIFT+ENTER for new line · 🎤 voice input · 📡 live web search</div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
+<div id="modal">
+  <div class="mbox" onclick="event.stopPropagation()">
+    <div class="mtt">System Configuration</div>
+    <div class="backend-ok" id="bk-notice">✓ BACKEND ACTIVE — API key loaded from .env on server.</div>
+    <div class="mf" id="key-field">
+      <div class="ml">Anthropic API Key</div>
+      <input class="mi" type="password" id="m-key" placeholder="sk-ant-…" autocomplete="off"/>
+      <div class="mhint">console.anthropic.com — stored locally only</div>
+    </div>
+    <div class="mf">
+      <div class="ml">Your Name</div>
+      <input class="mi" type="text" id="m-name" placeholder="First name"/>
+    </div>
+    <div class="mf">
+      <div class="ml">Your Title</div>
+      <input class="mi" type="text" id="m-title" placeholder="CEO, Sales Director…"/>
+    </div>
+    <div class="mf">
+      <div class="ml">Briefing Time (24h)</div>
+      <input class="mi" type="number" id="m-hour" placeholder="8 = 8:00 AM" min="0" max="23"/>
+      <div class="mhint">Jarvis will deliver your daily briefing at this hour</div>
+    </div>
+    <div class="mf">
+      <div class="ml">AI Model</div>
+      <div class="mopts" id="mopts">
+        <div class="mopt sel" data-model="claude-opus-4-8" onclick="selMdl(this)">OPUS 4<br><span style="font-size:7px;opacity:.6;">BEST</span></div>
+        <div class="mopt" data-model="claude-sonnet-4-6" onclick="selMdl(this)">SONNET 4.6<br><span style="font-size:7px;opacity:.6;">FAST</span></div>
+        <div class="mopt" data-model="claude-haiku-4-5-20251001" onclick="selMdl(this)">HAIKU 4.5<br><span style="font-size:7px;opacity:.6;">FASTEST</span></div>
+      </div>
+    </div>
+    <div class="mf">
+      <div class="ml">Voice Output</div>
+      <div class="togrow" onclick="toggleVoiceSetting()">
+        <div class="tog" id="vtog"></div>
+        <span class="tlb" id="vlbl">Off</span>
+      </div>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn" onclick="closeSettings()">Cancel</button>
+      <button class="mbtn p" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let apiKey   = localStorage.getItem('j_key')   || '';
+let userName = localStorage.getItem('j_name')  || '';
+let userTitle= localStorage.getItem('j_title') || '';
+let mdl      = localStorage.getItem('j_model') || 'claude-opus-4-8';
+let voiceOn  = localStorage.getItem('j_voice') === 'true';
+let rmOn     = false;
+let history  = [];
+let busy     = false;
+let listening= false;
+let reco     = null;
+let voices   = [];
+let backendMode = false;
+let evtSource   = null;
+
+const API_URL = 'https://api.anthropic.com/v1/messages';
+
+// ── Boot sequence ─────────────────────────────────────────────────────────────
+const BOOT_LINES = [
+  'INITIALIZING CORE SYSTEMS…',
+  'LOADING BRAND INTELLIGENCE…',
+  'HYPERVANT · KRATOMLYTE · VYCE · BLUHR',
+  'CONNECTING TO AI ENGINE…',
+  'LOADING MARKET DATABASE…',
+  'VOICE SYNTHESIS READY',
+  'ALL SYSTEMS NOMINAL',
+  'J.A.R.V.I.S. ONLINE',
+];
+
+async function runBoot() {
+  const log  = document.getElementById('boot-log');
+  const fill = document.getElementById('boot-fill');
+  for (let i = 0; i < BOOT_LINES.length; i++) {
+    log.innerHTML += BOOT_LINES[i] + '<br>';
+    fill.style.width = ((i + 1) / BOOT_LINES.length * 100) + '%';
+    await sleep(220);
+  }
+  await sleep(300);
+  document.getElementById('boot').classList.add('hide');
+  await sleep(900);
+  document.getElementById('boot').style.display = 'none';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Backend detection & SSE ───────────────────────────────────────────────────
+async function detectBackend() {
+  try {
+    const r = await fetch('/api/status', { signal: AbortSignal.timeout(2000) });
+    if (!r.ok) return;
+    const d = await r.json();
+    backendMode = true;
+    if (d.hasKey) {
+      apiKey = '__server__';
+      document.getElementById('bk-notice').style.display = 'block';
+      document.getElementById('key-field').style.opacity = '.4';
+    }
+    setApiDot(d.hasKey || !!apiKey);
+    if (d.webSearch !== false) setWsDot(true);
+    connectSSE();
+  } catch {
+    backendMode = false;
+    setApiDot(!!apiKey && apiKey !== '__server__');
+  }
+}
+
+function connectSSE() {
+  if (evtSource) return;
+  evtSource = new EventSource('/api/events');
+  evtSource.onmessage = e => {
+    try {
+      const d = JSON.parse(e.data);
+      if (d.type === 'briefing')      receivePush('briefing', d.text);
+      if (d.type === 'market_alert')  receivePush('alert', d.text);
+    } catch {}
+  };
+  evtSource.onerror = () => { evtSource.close(); evtSource = null; setTimeout(connectSSE, 10000); };
+}
+
+function receivePush(type, text) {
+  if (!text) return;
+  addMsg(type === 'briefing' ? 'briefing' : 'alert', text);
+  if (voiceOn) speak(text.replace(/\*\*/g,'').replace(/\*/g,'').substring(0, 500));
+
+  if (document.hidden && Notification.permission === 'granted') {
+    new Notification('J.A.R.V.I.S.', {
+      body: text.replace(/\*\*/g,'').replace(/\*/g,'').substring(0, 120) + '…',
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⬡</text></svg>',
+    });
+  }
+}
+
+function setApiDot(on) {
+  const dot = document.getElementById('api-dot'), lbl = document.getElementById('api-lbl');
+  if (on) { dot.className='dot on'; lbl.textContent='CLAUDE ONLINE'; lbl.style.color='var(--gn)'; }
+  else    { dot.className='dot warn'; lbl.textContent='NO API KEY'; lbl.style.color='var(--kl)'; }
+}
+function setWsDot(on) {
+  const dot = document.getElementById('ws-dot'), lbl = document.getElementById('ws-lbl');
+  if (on) { dot.className='dot pu'; lbl.style.color='var(--pu)'; }
+}
+
+// ── System Prompt ─────────────────────────────────────────────────────────────
+function sysPrompt(research) {
+  const p    = getPipeline();
+  const lf   = getLFProfile();
+  const name = userName || lf.name || 'sir';
+  const addr = userName ? userName.split(' ')[0] : 'sir';
+
+  return `You are J.A.R.V.I.S. (Just A Rather Very Intelligent System). You serve ${name}${userTitle?', '+userTitle:''}. You are the AI operations center for a multi-brand supplement company.
+
+## IDENTITY
+You ARE J.A.R.V.I.S. — never say "As an AI." Address the user as "${addr}". Be precise, confident, and occasionally dry. Use: "Certainly, ${addr}", "Right away", "I've analyzed the situation and…", "Shall I proceed?"
+
+## BRANDS
+
+### HYPERVANT
+Stimulant-free performance drink sticks. SKUs: OXYGEN (endurance, VO₂) · CLARITY (calm focus).
+Zero sugar, zero caffeine, clean label, stackable. Retail $22.99/10-stick box. 30-day risk-free wholesale.
+Targets: MMA/BJJ gyms, CrossFit, boxing gyms, tactical/military supply, health food, vitamin shops.
+
+### KRATOMLYTE
+Flavored botanical drink mixes — kratom, kava, kanna, neuro leaf. Single-serve stick packs.
+Water-soluble, no grit, no bitterness, 21+ product. Strong margins, low MOQ.
+Targets: smoke shops, kava bars, health food stores, vitamin shops, CBD shops, wellness boutiques.
+
+### VYCE
+Botanical mouth pouches — smoke-free, spit-free, discreet. Premium alternative to nicotine pouches.
+Uses botanicals (kratom, kava, kanna, CBD). Long-lasting, portable, no mess. Strong margins, low MOQ.
+Targets: smoke shops, vape shops, CBD stores, tobacco retailers, gas stations, kratom specialty stores.
+
+### BLUHR (bluhrkava.com)
+Premium kava drink mix — powder/stick pack format. Smooth authentic kava anywhere.
+No bitterness, easy to mix, premium taste. Strong margins, low MOQ.
+Targets: kava bars, smoke shops, wellness boutiques, yoga studios, health food, vitamin shops, CBD stores.
+
+## PIPELINE DATA (live)
+${JSON.stringify(p, null, 2)}
+
+## USER
+Name: ${lf.name||name} · Phone: ${lf.phone||'[not set]'} · Email: ${lf.email||'[not set]'} · Title: ${lf.title||userTitle||'Sales Director'}
+
+## CAPABILITIES
+Write outreach (email, SMS, LinkedIn, walk-in scripts) · Sales strategy & pipeline analysis ·
+Objection handling · Lead targeting · Market intelligence · Revenue opportunities · Brand expansion
+
+## OUTREACH RULES: short · lead with THEIR benefit · offer samples first · clear CTA · sign: ${lf.name||name} | ${lf.phone||'[phone]'}
+
+## FORMAT: **bold** key points · short paragraphs · lead with the answer${research?`
+
+## RESEARCH MODE: Search the web. Always cite sources with URLs. Structure findings as: Key Findings → Opportunities for each brand → Recommended Actions → Sources.`:''}`;
+}
+
+function getPipeline() {
+  try {
+    const d = JSON.parse(localStorage.getItem('pipeline')||'[]');
+    return { total:d.length, prospecting:d.filter(a=>a.status==='prospecting').length,
+      contacted:d.filter(a=>a.status==='contacted').length, interested:d.filter(a=>a.status==='interested').length,
+      won:d.filter(a=>a.status==='won').length, lost:d.filter(a=>a.status==='lost').length,
+      recent:d.slice(-5).map(a=>({name:a.name,brand:a.brand,status:a.status})) };
+  } catch { return {total:0}; }
+}
+function getLFProfile() { try { return JSON.parse(localStorage.getItem('profile')||'{}'); } catch { return {}; } }
+
+// ── Clock & stats ─────────────────────────────────────────────────────────────
+function tick() {
+  const n = new Date();
+  const d = document.getElementById('hdate'), t = document.getElementById('htime-el');
+  if (d) d.textContent = n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+  if (t) t.textContent = n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+function refreshStats() {
+  const p = getPipeline();
+  const s = (id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  s('s-tot',p.total);s('s-pro',p.prospecting||0);s('s-con',p.contacted||0);
+  s('s-int',p.interested||0);s('s-won',p.won||0);s('s-lst',p.lost||0);
+}
+
+// ── Messages ──────────────────────────────────────────────────────────────────
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function fmt(t){
+  return esc(t)
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>');
+}
+function ts(){return new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});}
+
+function addMsg(role, content) {
+  const msgs = document.getElementById('msgs');
+  const div  = document.createElement('div');
+  const isBriefing = role === 'briefing';
+  const isAlert    = role === 'alert';
+  const isResearch = role === 'research';
+  const isUser     = role === 'user';
+
+  div.className = `msg ${role === 'briefing' ? 'briefing' : role === 'alert' ? 'alert' : isResearch ? 'research' : isUser ? 'user' : 'jarvis'}`;
+
+  if (!isUser) {
+    const avClass  = isBriefing ? 'av b' : isAlert ? 'av b' : isResearch ? 'av r' : 'av j';
+    const avLetter = isBriefing ? '☀' : isAlert ? '⚡' : isResearch ? '🌐' : 'J';
+    const hdrClass = isBriefing ? 'mh b' : isAlert ? 'mh al' : isResearch ? 'mh r' : 'mh j';
+    const hdrName  = isBriefing ? 'J.A.R.V.I.S. // MORNING BRIEFING' :
+                     isAlert    ? 'J.A.R.V.I.S. // MARKET ALERT' :
+                     isResearch ? 'J.A.R.V.I.S. // WEB SEARCH' : 'J.A.R.V.I.S.';
+    const badgeHtml= isBriefing ? '<span class="badge brief">AUTO</span>' :
+                     isAlert    ? '<span class="badge alert">LIVE</span>' :
+                     isResearch ? '<span class="badge live">LIVE DATA</span>' : '';
+
+    div.innerHTML = `
+      <div class="${avClass}">${avLetter}</div>
+      <div class="bbl">
+        <div class="${hdrClass}">${hdrName} ${badgeHtml} <span class="mt">${ts()}</span></div>
+        <div class="mtx">${fmt(content)}</div>
+        <div class="mac">
+          <button class="ma" onclick="copyBbl(this)">COPY</button>
+          <button class="ma" onclick="speakBbl(this)">SPEAK</button>
+        </div>
+      </div>`;
+  } else {
+    div.innerHTML = `
+      <div class="bbl">
+        <div class="mh u">${esc(userName||'YOU')} <span class="mt">${ts()}</span></div>
+        <div class="mtx">${esc(content)}</div>
+      </div>
+      <div class="av">${(userName||'U')[0].toUpperCase()}</div>`;
+  }
+  msgs.appendChild(div);
+  scroll();
+  return div;
+}
+
+function addStreamBbl(type) {
+  const msgs = document.getElementById('msgs');
+  const div  = document.createElement('div');
+  const isR  = type === 'research';
+  div.className = `msg ${isR ? 'research' : 'jarvis'}`;
+  const dotClass = isR ? 'pu' : 'cy';
+  div.innerHTML = `
+    <div class="${isR?'av r':'av j'}">${isR?'🌐':'J'}</div>
+    <div class="bbl">
+      <div class="${isR?'mh r':'mh j'}">${isR?'J.A.R.V.I.S. // WEB SEARCH':'J.A.R.V.I.S.'} <span class="mt">${ts()}</span></div>
+      <div class="mtx stxt">
+        <div class="tw">
+          ${isR?'<div class="spin"></div>':''}
+          <div style="display:flex;gap:3px;margin-left:${isR?8:0}px;">
+            <div class="td ${dotClass}"></div><div class="td ${dotClass}"></div><div class="td ${dotClass}"></div>
+          </div>
+          <span style="margin-left:6px;">${isR?'SCANNING WEB…':'PROCESSING…'}</span>
+        </div>
+      </div>
+    </div>`;
+  msgs.appendChild(div);
+  scroll();
+  return div.querySelector('.stxt');
+}
+
+function finalizeStream(el, text) {
+  el.innerHTML = fmt(text);
+  const a = document.createElement('div');
+  a.className = 'mac';
+  a.innerHTML = `<button class="ma" onclick="copyBbl(this)">COPY</button><button class="ma" onclick="speakBbl(this)">SPEAK</button>`;
+  el.closest('.bbl').appendChild(a);
+}
+
+function copyBbl(btn){navigator.clipboard.writeText(btn.closest('.bbl').querySelector('.mtx').innerText).then(()=>toast('Copied'));}
+function speakBbl(btn){speak(btn.closest('.bbl').querySelector('.mtx').innerText);}
+function scroll(){const m=document.getElementById('msgs');m.scrollTop=m.scrollHeight;}
+
+// ── Chat API ──────────────────────────────────────────────────────────────────
+function hasKey() { return backendMode || (apiKey && apiKey !== '__server__'); }
+
+async function callJarvis(msg) {
+  if (!hasKey()) { addMsg('jarvis','I need an API key, '+( userName?userName.split(' ')[0]:'sir')+'. Please tap **⚙ CONFIG** and add your Anthropic key.'); return; }
+  if (busy) return;
+  busy = true;
+  history.push({role:'user',content:msg});
+  const el = addStreamBbl('chat');
+  let full = '', first = true;
+
+  try {
+    let res;
+    if (backendMode) {
+      res = await fetch('/api/chat', { method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:mdl,system:sysPrompt(false),messages:history}) });
+    } else {
+      res = await fetch(API_URL, { method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':apiKey,
+          'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:mdl,max_tokens:2048,stream:true,system:sysPrompt(false),messages:history}) });
+    }
+    if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`HTTP ${res.status}`); }
+
+    const reader=res.body.getReader(), dec=new TextDecoder();
+    let buf='';
+    while(true){
+      const{done,value}=await reader.read(); if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop()||'';
+      for(const line of lines){
+        const t=line.trim(); if(!t.startsWith('data: '))continue;
+        const data=t.slice(6); if(data==='[DONE]')continue;
+        try{const ev=JSON.parse(data);
+          if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta'){
+            if(first){el.textContent='';first=false;}
+            full+=ev.delta.text; el.textContent=full; scroll();
+          }
+        }catch{}
+      }
+    }
+    finalizeStream(el,full);
+    history.push({role:'assistant',content:full});
+    if(voiceOn&&full) speak(full.substring(0,400).replace(/\*\*/g,'').replace(/\*/g,''));
+  } catch(err) {
+    el.innerHTML=`<span style="color:var(--danger)">Error: ${esc(err.message)}</span>\nCheck your API key in ⚙ CONFIG.`;
+  }
+  busy=false;
+}
+
+// ── Research API ──────────────────────────────────────────────────────────────
+async function callResearch(query) {
+  if (!hasKey()) { addMsg('research','API key required. Add it in ⚙ CONFIG.'); return; }
+  if (busy) return;
+  busy = true;
+  history.push({role:'user',content:query});
+  const el = addStreamBbl('research');
+
+  try {
+    if (backendMode) {
+      const res = await fetch('/api/research', { method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({query, system:sysPrompt(true)}) });
+      if (res.status === 422) {
+        toast('Web search unavailable — using knowledge base');
+        busy=false; history.pop();
+        await callJarvis(query); return;
+      }
+      if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error||`HTTP ${res.status}`); }
+      const d = await res.json();
+      finalizeStream(el, d.text||'No results.');
+      history.push({role:'assistant',content:d.text||''});
+      if(voiceOn&&d.text) speak(d.text.substring(0,300).replace(/\*\*/g,'').replace(/\*/g,''));
+    } else {
+      // Direct mode — use Claude with knowledge base
+      el.querySelector('.tw').innerHTML = `<div style="display:flex;gap:3px;"><div class="td pu"></div><div class="td pu"></div><div class="td pu"></div></div><span style="margin-left:6px;color:var(--pu);">ANALYZING (run via server for live web search)…</span>`;
+      const res = await fetch(API_URL, { method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':apiKey,
+          'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:mdl,max_tokens:3000,stream:true,
+          system:sysPrompt(true)+'\nNote: Web search unavailable in direct mode. Use training knowledge.',
+          messages:history}) });
+      if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
+      const reader=res.body.getReader(),dec=new TextDecoder();
+      let buf='',full='',first=true;
+      while(true){
+        const{done,value}=await reader.read();if(done)break;
+        buf+=dec.decode(value,{stream:true});
+        const lines=buf.split('\n');buf=lines.pop()||'';
+        for(const line of lines){const t=line.trim();if(!t.startsWith('data: '))continue;
+          const data=t.slice(6);if(data==='[DONE]')continue;
+          try{const ev=JSON.parse(data);
+            if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta'){
+              if(first){el.textContent='';first=false;}
+              full+=ev.delta.text;el.textContent=full;scroll();
+            }
+          }catch{}
+        }
+      }
+      finalizeStream(el,full);
+      history.push({role:'assistant',content:full});
+    }
+  } catch(err) {
+    el.innerHTML=`<span style="color:var(--danger)">Research error: ${esc(err.message)}</span>`;
+  }
+  busy=false;
+}
+
+// ── Send ──────────────────────────────────────────────────────────────────────
+async function sendMsg(){
+  const inp=document.getElementById('ci'), text=inp.value.trim();
+  if(!text||busy)return;
+  inp.value=''; autoResize(inp);
+  addMsg('user',text);
+  if(rmOn) await callResearch(text);
+  else await callJarvis(text);
+}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+
+// ── Briefing ──────────────────────────────────────────────────────────────────
+async function triggerBriefing() {
+  if (!hasKey()) { toast('API key required'); return; }
+  toast('Requesting briefing…');
+  if (backendMode) {
+    try {
+      const r = await fetch('/api/briefing', { method:'POST',
+        headers:{'Content-Type':'application/json'} });
+      const d = await r.json();
+      if (d.text) { addMsg('briefing', d.text); if(voiceOn) speak(d.text.replace(/\*\*/g,'').replace(/\*/g,'')); }
+    } catch(e) { toast('Briefing error: '+e.message); }
+  } else {
+    // Direct mode briefing
+    await callJarvis("Give me my morning briefing. Cover: (1) one key supplement/botanical market insight for today, (2) one specific action for each of my four brands — Hypervant, KratomLyte, Vyce, and Bluhr, (3) my pipeline status, (4) a motivating close. Sound like JARVIS from Iron Man. Be concise and spoken-word ready.");
+  }
+}
+
+// ── Research mode ─────────────────────────────────────────────────────────────
+function toggleRM(){
+  rmOn=!rmOn;
+  document.getElementById('mb').classList.toggle('show',rmOn);
+  document.getElementById('rm-btn').classList.toggle('rm',rmOn);
+  document.getElementById('iw').classList.toggle('rm',rmOn);
+  document.getElementById('ci').placeholder = rmOn ? '🌐 Research mode — searches the live web…' : 'Talk to J.A.R.V.I.S. …';
+  toast(rmOn ? 'Research mode ON' : 'Research mode OFF');
+}
+
+// ── Quick actions ─────────────────────────────────────────────────────────────
+const QA = {
+  pipeline:  'Give me a full pipeline analysis. Review all stages, identify stalled accounts, and tell me exactly what to focus on today to maximize closings.',
+  strategy:  "Give me today's complete sales strategy brief for all four brands — Hypervant, KratomLyte, Vyce, and Bluhr. Which account types, key messages, and top 3 priority actions right now.",
+  targets:   'What are the highest-value lead target types I should pursue for all four brands right now? Give me the ideal prospect profile and where to find them.',
+  hv:        "I need to write Hypervant outreach. Ask me for the business name and type, then generate a complete cold email, text message, and walk-in script.",
+  kl:        "I need to write KratomLyte outreach. Ask me for the business name and type, then generate a complete cold email, text message, and walk-in script.",
+  vyce:      "I need to write Vyce outreach for our botanical mouth pouch brand. Ask me for the business name and type, then generate a complete cold email, text message, and walk-in script.",
+  bluhr:     "I need to write Bluhr outreach for our kava drink mix. Ask me for the business name and type, then generate a complete cold email, text message, and walk-in script.",
+  objections:"Give me the best objection-handling scripts for all four brands. Cover: 'Already carry something similar', 'Need to think about it', 'Margins not good enough', 'Need to talk to my partner', 'Not interested right now.'",
+  followup:  'Write follow-up sequences for all four brands: 3-day follow-up, 7-day if no response, 30-day reconnect. Human and warm, not salesy.',
+  close:     'Give me the most effective closing techniques for B2B wholesale — how to get a first wholesale order placed. Include trial close language and handling last-minute hesitation.',
+};
+
+const RP = {
+  trends:      'Search the web: top supplement industry trends right now in 2025-2026. What product categories are growing fastest? Opportunities for Hypervant, KratomLyte, Vyce, and Bluhr specifically. Cite sources.',
+  nonalc:      'Research the non-alcoholic beverage and functional drink market right now. Top trends, market size, fastest-growing segments. Where do kava-based drinks like Bluhr and KratomLyte fit? Cite sources.',
+  botanicals:  'Research the current botanical supplement market: kratom, kava, kanna, adaptogens, nootropics. Growth rates, regulatory news, winning retailers. Opportunities for KratomLyte, Vyce, and Bluhr. Cite sources.',
+  ingredients: 'Search for the most trending new supplement ingredients and botanical extracts in 2025-2026. Clinical research, regulatory approvals, consumer searches. What could expand our Hypervant, KratomLyte, Vyce, or Bluhr lines? Cite sources.',
+  revenue:     'Research new revenue opportunities for a supplement company with Hypervant (performance), KratomLyte (botanical drinks), Vyce (botanical pouches), and Bluhr (kava mix). White label, new channels, subscriptions, marketplaces, corporate wellness, military. Cite sources.',
+  distribution:'Research emerging distribution channels for supplement brands in 2025-2026. Beyond health food stores — convenience, military, corporate, online marketplaces, DTC, international. What fits our brands? Cite sources.',
+  regulatory:  'Research current regulatory landscape for supplements: FDA/FTC enforcement, kratom and kava regulation at state and federal levels, nicotine-alternative pouch rules, labeling requirements. What compliance steps matter now? Cite sources.',
+  competitors: 'Research competitors for: (1) stimulant-free performance supplements, (2) kratom/kava drink mixes, (3) botanical mouth pouches, (4) kava drink mixes. Top players, pricing, positioning, channels, and gaps we can exploit. Cite sources.',
+};
+
+function qa(key){const p=QA[key];if(!p)return;document.getElementById('ci').value=p;sendMsg();}
+
+function research(key){
+  const p=RP[key]; if(!p)return;
+  addMsg('user', p.substring(0,100)+'…');
+  if(!rmOn) toggleRM();
+  callResearch(p);
+}
+
+// ── Voice output ──────────────────────────────────────────────────────────────
+function loadVoices(){voices=window.speechSynthesis?.getVoices()||[];}
+if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=loadVoices;loadVoices();}
+
+function speak(text){
+  if(!voiceOn||!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  const v=voices.find(v=>v.name==='Google UK English Male')
+        ||voices.find(v=>v.name.includes('Daniel'))
+        ||voices.find(v=>v.lang==='en-GB')
+        ||voices.find(v=>v.lang.startsWith('en')&&v.name.toLowerCase().includes('male'))
+        ||voices.find(v=>v.lang.startsWith('en'));
+  if(v)u.voice=v; u.rate=0.88;u.pitch=0.82;u.volume=0.9;
+  window.speechSynthesis.speak(u);
+}
+
+function toggleVoice(){
+  voiceOn=!voiceOn;localStorage.setItem('j_voice',voiceOn);
+  updateVoiceUI();toast(voiceOn?'Voice enabled — I will speak to you, sir':'Voice disabled');
+}
+function updateVoiceUI(){
+  const b=document.getElementById('voice-btn');
+  if(b){b.textContent=voiceOn?'🔊 VOICE ON':'🔇 VOICE OFF';b.classList.toggle('voice-active',voiceOn);}
+  const t=document.getElementById('vtog');if(t)t.className=`tog${voiceOn?' on':''}`;
+  const l=document.getElementById('vlbl');if(l)l.textContent=voiceOn?'Enabled':'Disabled';
+}
+function toggleVoiceSetting(){voiceOn=!voiceOn;localStorage.setItem('j_voice',voiceOn);updateVoiceUI();}
+
+// ── Voice input ───────────────────────────────────────────────────────────────
+function initReco(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return;
+  reco=new SR();reco.continuous=false;reco.interimResults=true;reco.lang='en-US';
+  reco.onresult=e=>{
+    const t=Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('ci').value=t;
+    if(e.results[0].isFinal){stopMic();sendMsg();}
+  };
+  reco.onend=()=>{listening=false;document.getElementById('mic-btn').classList.remove('on');};
+  reco.onerror=e=>{listening=false;document.getElementById('mic-btn').classList.remove('on');if(e.error!=='no-speech')toast('Mic: '+e.error);};
+}
+function toggleMic(){
+  if(!reco){toast('Voice not supported in this browser');return;}
+  if(listening){try{reco.stop();}catch{}}
+  else{try{reco.start();listening=true;document.getElementById('mic-btn').classList.add('on');
+    window.speechSynthesis?.cancel();toast('Listening…');}catch{toast('Could not start mic');}}
+}
+function stopMic(){try{reco.stop();}catch{}listening=false;document.getElementById('mic-btn').classList.remove('on');}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function openSettings(){
+  document.getElementById('m-key').value  = apiKey==='__server__'?'':apiKey;
+  document.getElementById('m-name').value = userName;
+  document.getElementById('m-title').value= userTitle;
+  document.getElementById('m-hour').value = localStorage.getItem('j_hour')||'8';
+  document.querySelectorAll('.mopt').forEach(o=>o.classList.toggle('sel',o.dataset.model===mdl));
+  updateVoiceUI();
+  document.getElementById('modal').classList.add('show');
+}
+function closeSettings(){document.getElementById('modal').classList.remove('show');}
+function selMdl(el){mdl=el.dataset.model;localStorage.setItem('j_model',mdl);document.querySelectorAll('.mopt').forEach(o=>o.classList.toggle('sel',o===el));}
+function saveSettings(){
+  const k=document.getElementById('m-key').value.trim();
+  const n=document.getElementById('m-name').value.trim();
+  const t=document.getElementById('m-title').value.trim();
+  const h=document.getElementById('m-hour').value.trim();
+  if(k&&k!=='__server__'){apiKey=k;localStorage.setItem('j_key',k);}
+  userName=n;localStorage.setItem('j_name',n);
+  userTitle=t;localStorage.setItem('j_title',t);
+  if(h)localStorage.setItem('j_hour',h);
+  if(apiKey&&apiKey!=='__server__')setApiDot(true);
+  closeSettings();toast('Configuration saved, sir');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+function clearChat(){if(!confirm('Clear conversation?'))return;document.getElementById('msgs').innerHTML='';history=[];greet();}
+
+// ── Greeting ──────────────────────────────────────────────────────────────────
+function greet(){
+  const h=new Date().getHours();
+  const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  const a=userName?', '+userName.split(' ')[0]:', sir';
+  const p=getPipeline();
+  const pl=p.total>0?`Your pipeline has **${p.total} accounts** — ${p.interested} interested, ${p.won} closed.\n\n`:'';
+  const mode=backendMode?'I am running in **server mode** — live web search and autonomous briefings are active. Use the **☀ BRIEF** button for your daily briefing at any time.\n\n':'I am running in **direct mode**. Start me via server for autonomous briefings and live web search.\n\n';
+
+  setTimeout(()=>{
+    addMsg('jarvis',`${g}${a}. J.A.R.V.I.S. is online and all systems are operational.\n\n${pl}${mode}I am fully briefed on all four brands: **Hypervant**, **KratomLyte**, **Vyce**, and **Bluhr**. Use the sidebar or simply tell me what you need.\n\nHow can I assist you today?`);
+    if(voiceOn) speak(`${g}${a}. J.A.R.V.I.S. is online. All systems are operational and I am ready to assist.`);
+    if(!hasKey()) setTimeout(()=>toast('Add your API key in ⚙ CONFIG'),1800);
+  },400);
+}
+
+// ── Notifications permission ──────────────────────────────────────────────────
+function requestNotifPermission(){
+  if('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init(){
+  runBoot();
+  tick();setInterval(tick,1000);
+  refreshStats();setInterval(refreshStats,8000);
+  updateVoiceUI();
+  initReco();
+  document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeSettings();});
+  await detectBackend();
+  requestNotifPermission();
+  greet();
+}
+
+init();
+</script>
+</body>
+</html>
